@@ -1,4 +1,4 @@
-# CryoHub
+# QuackUI 
 
 Roblox Luau UI library — dark charcoal UI, soft animations, loader, named configs, floating duck toggle.
 
