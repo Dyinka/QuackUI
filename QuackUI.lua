@@ -261,10 +261,10 @@ function Library:CreateWindow(opts)
 	local HeaderImage   = opts.HeaderImage or DUCK_ID
 	local FloatImage    = opts.FloatImage or DUCK_ID
 
-	local ROW_H   = 60
-	local BTN_H   = 46
-	local FIELD_H = 36
-	local PAD     = 18
+	local ROW_H   = 56
+	local BTN_H   = 40
+	local FIELD_H = 32
+	local PAD     = 14
 
 	local Colors = {}
 	for k, v in pairs(Themes[ThemeName] or Themes.Charcoal) do Colors[k] = v end
@@ -718,7 +718,7 @@ function Library:CreateWindow(opts)
 	end)
 
 	local function section(par, title, ord)
-		local s = mk("Frame", {Size = UDim2.new(1,0,0,26), BackgroundTransparency = 1, BorderSizePixel = 0, LayoutOrder = ord or 0, Parent = par})
+		local s = mk("Frame", {Size = UDim2.new(1,0,0,22), BackgroundTransparency = 1, BorderSizePixel = 0, LayoutOrder = ord or 0, Parent = par})
 		mk("TextLabel", {
 			Size = UDim2.new(1,0,1,0), BackgroundTransparency = 1, BorderSizePixel = 0, Text = title:upper(),
 			FontFace = FingerPaint, TextSize = 13, TextColor3 = Colors.TextDim,
@@ -729,12 +729,12 @@ function Library:CreateWindow(opts)
 	local function toggle(par, title, desc, def, ord, cb)
 		local row = mk("Frame", {Size = UDim2.new(1,0,0,ROW_H), BackgroundTransparency = 1, BorderSizePixel = 0, LayoutOrder = ord or 0, Parent = par})
 		mk("TextLabel", {
-			Position = UDim2.fromOffset(0,6), Size = UDim2.new(1,-70,0,22), BackgroundTransparency = 1, BorderSizePixel = 0,
+			Position = UDim2.fromOffset(0,3), Size = UDim2.new(1,-70,0,20), BackgroundTransparency = 1, BorderSizePixel = 0,
 			Text = title, FontFace = FingerPaint, TextSize = 17, TextColor3 = Colors.Text,
 			TextXAlignment = Enum.TextXAlignment.Left, Parent = row,
 		})
 		mk("TextLabel", {
-			Position = UDim2.fromOffset(0,28), Size = UDim2.new(1,-70,0,18), BackgroundTransparency = 1, BorderSizePixel = 0,
+			Position = UDim2.fromOffset(0,25), Size = UDim2.new(1,-70,0,17), BackgroundTransparency = 1, BorderSizePixel = 0,
 			Text = desc or "", FontFace = FingerPaint, TextSize = 13, TextColor3 = Colors.TextDim,
 			TextXAlignment = Enum.TextXAlignment.Left, Parent = row,
 		})
@@ -799,7 +799,7 @@ function Library:CreateWindow(opts)
 			TextXAlignment = Enum.TextXAlignment.Right, Parent = row,
 		})
 		local track = mk("Frame", {
-			Position = UDim2.new(0,0,0,36), Size = UDim2.new(1,0,0,10),
+			Position = UDim2.new(0,0,0,30), Size = UDim2.new(1,0,0,8),
 			BackgroundColor3 = Colors.SliderTrack, BorderSizePixel = 0, Parent = row,
 		})
 		corner(track, 5)
@@ -817,7 +817,7 @@ function Library:CreateWindow(opts)
 		corner(knob, 8) stroke(knob, Colors.TitleBar, 1, 0.2)
 		local dragging = false
 		local hit = mk("TextButton", {
-			Position = UDim2.new(0,0,0,30), Size = UDim2.new(1,0,0,24),
+			Position = UDim2.new(0,0,0,26), Size = UDim2.new(1,0,0,22),
 			BackgroundTransparency = 1, BorderSizePixel = 0, Text = "", Parent = row,
 		})
 		hit.MouseEnter:Connect(function()
@@ -982,7 +982,7 @@ function Library:CreateWindow(opts)
 			TextXAlignment = Enum.TextXAlignment.Left, Parent = row,
 		})
 		local field = mk("Frame", {
-			Position = UDim2.fromOffset(0,24), Size = UDim2.new(1,0,0,FIELD_H),
+			Position = UDim2.fromOffset(0,22), Size = UDim2.new(1,0,0,FIELD_H),
 			BackgroundColor3 = Colors.Button, BackgroundTransparency = 0.12, BorderSizePixel = 0, Parent = row,
 		})
 		corner(field, 9)
@@ -1064,7 +1064,7 @@ function Library:CreateWindow(opts)
 			TextXAlignment = Enum.TextXAlignment.Left, Parent = row,
 		})
 		local trigger = mk("TextButton", {
-			Position = UDim2.fromOffset(0,24), Size = UDim2.new(1,0,0,FIELD_H),
+			Position = UDim2.fromOffset(0,22), Size = UDim2.new(1,0,0,FIELD_H),
 			BackgroundColor3 = Colors.Button, BackgroundTransparency = 0.12,
 			BorderSizePixel = 0, Text = "", AutoButtonColor = false, Parent = row,
 		})
@@ -1540,7 +1540,7 @@ function Library:CreateWindow(opts)
 			CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y,
 			ScrollingDirection = Enum.ScrollingDirection.Y, Visible = false, ZIndex = 1, Parent = Content,
 		})
-		mk("UIListLayout", {SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 16), Parent = frame})
+		mk("UIListLayout", {SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 8), Parent = frame})
 		mk("UIPadding", {
 			PaddingTop = UDim.new(0,PAD), PaddingLeft = UDim.new(0,PAD),
 			PaddingRight = UDim.new(0,PAD), PaddingBottom = UDim.new(0,PAD), Parent = frame,
