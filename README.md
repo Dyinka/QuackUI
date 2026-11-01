@@ -2,8 +2,7 @@
 
 Roblox Luau UI library — dark charcoal UI, soft animations, loader, named configs, floating duck toggle.
 
-**Source (raw):**  
-https://raw.githubusercontent.com/Lu4ikk1/CryoHubLib/refs/heads/main/CryoLibReBirth
+**Source (raw)**  
 
 ---
 
