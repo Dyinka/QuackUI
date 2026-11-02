@@ -1,5 +1,5 @@
 -- language: Luau
--- QuackHub — dense rows · white lines · soft buttons · duck float
+-- QuackHub — Stealth Edition · dense rows · white lines · soft buttons · duck float
 
 local Players          = game:GetService("Players")
 local TweenService     = game:GetService("TweenService")
@@ -10,6 +10,25 @@ local HttpService      = game:GetService("HttpService")
 local TextService      = game:GetService("TextService")
 local LocalPlayer      = Players.LocalPlayer
 
+-- ═══════════════════════════════════════════════════════════
+-- STEALTH MODULE
+-- ═══════════════════════════════════════════════════════════
+local Stealth = {}
+local GuiParent = (gethui and gethui()) or LocalPlayer:WaitForChild("PlayerGui")
+local PanicKey = Enum.KeyCode.RightShift -- Клавиша экстренного скрытия
+
+-- Генерация случайного имени для обхода детекта по имени "FingerPaintUI"
+local function randomName()
+    local chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+    local len = math.random(10, 20)
+    local str = ""
+    for i = 1, len do
+        str = str .. chars:sub(math.random(1, #chars), math.random(1, #chars))
+    end
+    return str
+end
+
+-- Очистка следов перед запуском
 for _, g in ipairs(LocalPlayer:WaitForChild("PlayerGui"):GetChildren()) do
 	if g.Name == "FingerPaintUI" or g.Name == "FingerPaintLoader"
 		or g.Name:find("Cryo") or g.Name:find("Quack") then
@@ -106,7 +125,7 @@ local function safeName(name)
 end
 
 -- ═══════════════════════════════════════════════════════════
--- LOADER
+-- LOADER (STEALTH)
 -- ═══════════════════════════════════════════════════════════
 function Library:CreateLoader(opts)
 	opts = opts or {}
@@ -130,9 +149,10 @@ function Library:CreateLoader(opts)
 	local FloatId  = opts.FloatImage or DUCK_ID
 
 	local gui = mk("ScreenGui", {
-		Name = "FingerPaintLoader", ResetOnSpawn = false, IgnoreGuiInset = true,
+		Name = randomName(), -- Случайное имя
+		ResetOnSpawn = false, IgnoreGuiInset = true,
 		ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
-		Parent = LocalPlayer:WaitForChild("PlayerGui"),
+		Parent = GuiParent,
 	})
 
 	local bg = mk("Frame", {
@@ -235,7 +255,7 @@ function Library:CreateLoader(opts)
 end
 
 -- ═══════════════════════════════════════════════════════════
--- WINDOW
+-- WINDOW (STEALTH INTEGRATION)
 -- ═══════════════════════════════════════════════════════════
 function Library:CreateWindow(opts)
 	opts = opts or {}
@@ -309,9 +329,10 @@ function Library:CreateWindow(opts)
 	end
 
 	local ScreenGui = mk("ScreenGui", {
-		Name = "FingerPaintUI", ResetOnSpawn = false, IgnoreGuiInset = true,
+		Name = randomName(), -- Случайное имя
+		ResetOnSpawn = false, IgnoreGuiInset = true,
 		ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
-		Parent = LocalPlayer:WaitForChild("PlayerGui"),
+		Parent = GuiParent,
 	})
 
 	local PopupLayer = mk("Frame", {
@@ -708,9 +729,15 @@ function Library:CreateWindow(opts)
 			drag = false lastPos = Main.Position
 		end
 	end)
+	
+	-- PANIC KEY HANDLER
 	UserInputService.InputBegan:Connect(function(inp, g)
 		if g then return end
 		if inp.KeyCode == ToggleKey then Toggle() end
+		if inp.KeyCode == PanicKey then
+			ScreenGui.Enabled = not ScreenGui.Enabled
+			Notify("Stealth", ScreenGui.Enabled and "UI Visible" or "UI Hidden (Panic)", 2)
+		end
 	end)
 
 	-- ── components ──────────────────────────────────────────
