@@ -10,7 +10,7 @@ local LocalPlayer      = Players.LocalPlayer
 local Library = {}
 
 -- ═══════════════════════════════════════════════════════════
--- STEALTH helpers — random names, high DisplayOrder 67
+-- STEALTH helpers — random names, high DisplayOrder
 -- ═══════════════════════════════════════════════════════════
 local function _rand(n)
 	n = n or 10
@@ -1248,9 +1248,6 @@ function Library:CreateWindow(opts)
 		}
 	end
 		
-local multiDropdownCode = [==[
--- Floating multi-select dropdown. Same visual as single dropdown.
--- Auto-flips upward if the panel bottom would exceed PopupLayer/viewport bounds.
 local function multiDropdown(par, title, options, defaults, ord, cb)
 	options = options or {}
 	local selected = {}
@@ -1526,13 +1523,6 @@ local function multiDropdown(par, title, options, defaults, ord, cb)
 		Get = function() return selected end,
 	}
 end
-
-function Tab:CreateMultiDropdown(o)
-	o = o or {} nextO += 1
-	local el = multiDropdown(frame, o.Title or "Multi", o.Options or {}, o.Default, nextO, o.Callback)
-	register(el, o.Flag) return el
-end
-]==]
 
 	local function colorpicker(par, title, def, ord, cb)
 		def = def or Color3.fromRGB(160,160,170)
