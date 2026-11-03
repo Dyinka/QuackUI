@@ -50,8 +50,8 @@ do
 end
 task.wait()
 
--- Default font: stock Gotham (less fingerprint). Custom font only if explicitly enabled later.
-local FingerPaint = Enum.Font.GothamBold
+-- Default font: Font datatype (FontFace expects Font, not EnumItem)
+local FingerPaint = Font.fromEnum(Enum.Font.GothamBold)
 local LINE = Color3.fromRGB(235, 235, 240)
 local DUCK_ID = "rbxassetid://71109437053861"
 -- Z order above almost all game UI
@@ -111,7 +111,13 @@ local DefaultTw = {
 
 local function mk(c, p)
 	local o = Instance.new(c)
-	for k, v in pairs(p or {}) do o[k] = v end
+	for k, v in pairs(p or {}) do
+		if k == "FontFace" and typeof(v) == "EnumItem" then
+			o.FontFace = Font.fromEnum(v)
+		else
+			o[k] = v
+		end
+	end
 	return o
 end
 local function corner(p, r)
