@@ -10,7 +10,7 @@ local LocalPlayer      = Players.LocalPlayer
 local Library = {}
 
 -- ═══════════════════════════════════════════════════════════
--- STEALTH helpers — random names, high DisplayOrder
+-- STEALTH helpers — random names, high DisplayOrder 67
 -- ═══════════════════════════════════════════════════════════
 local function _rand(n)
 	n = n or 10
@@ -1529,13 +1529,7 @@ function Library:CreateWindow(opts)
 	}
 end
 
-function Tab:CreateMultiDropdown(o)
-	o = o or {} nextO += 1
-	local el = multiDropdown(frame, o.Title or "Multi", o.Options or {}, o.Default, nextO, o.Callback)
-	register(el, o.Flag) return el
-end
 
-]==]
 
 	local function colorpicker(par, title, def, ord, cb)
 		def = def or Color3.fromRGB(160,160,170)
