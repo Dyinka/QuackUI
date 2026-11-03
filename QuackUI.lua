@@ -10,7 +10,7 @@ local LocalPlayer      = Players.LocalPlayer
 local Library = {}
 
 -- ═══════════════════════════════════════════════════════════
--- STEALTH helpers — random names, high DisplayOrder 67
+-- STEALTH helpers — random names, high DisplayOrder 
 -- ═══════════════════════════════════════════════════════════
 local function _rand(n)
 	n = n or 10
@@ -1248,6 +1248,222 @@ function Library:CreateWindow(opts)
 		}
 	end
 
+	local function multiDropdown(par, title, options, defaults, ord, cb)
+	options = options or {}
+	local selected = {}
+	for k, v in pairs(defaults or {}) do
+		if v then selected[k] = true end
+	end
+
+	local function summaryText()
+		local picked = {}
+		for _, opt in ipairs(options) do
+			if selected[opt] then picked[#picked + 1] = opt end
+		end
+		local n = #picked
+		if n == 0 then return "(none)" end
+		if n == #options then return "All selected (" .. n .. ")" end
+		if n <= 2 then return table.concat(picked, ", ") end
+		return picked[1] .. ", " .. picked[2] .. " +" .. (n - 2) .. " more"
+	end
+
+	local row = mk("Frame", {
+		Size = UDim2.new(1, 0, 0, ROW_H), BackgroundTransparency = 1, BorderSizePixel = 0,
+		LayoutOrder = ord or 0, Parent = par,
+	})
+	mk("TextLabel", {
+		Position = UDim2.fromOffset(0, 0), Size = UDim2.new(1, -8, 0, 16),
+		BackgroundTransparency = 1, BorderSizePixel = 0,
+		Text = title, FontFace = FingerPaint, TextSize = 15, TextColor3 = Colors.Text,
+		TextXAlignment = Enum.TextXAlignment.Left, Parent = row,
+	})
+	local trigger = mk("TextButton", {
+		Position = UDim2.fromOffset(0, 18), Size = UDim2.new(1, 0, 0, FIELD_H),
+		BackgroundColor3 = Colors.Button, BackgroundTransparency = 0.12,
+		BorderSizePixel = 0, Text = "", AutoButtonColor = false, Parent = row,
+	})
+	corner(trigger, 8)
+	local trSt = stroke(trigger, Colors.RowStroke, 1, 0.4)
+	local triggerLbl = mk("TextLabel", {
+		Position = UDim2.fromOffset(12, 0), Size = UDim2.new(1, -36, 1, 0),
+		BackgroundTransparency = 1, BorderSizePixel = 0,
+		Text = summaryText(), FontFace = FingerPaint,
+		TextSize = 14, TextColor3 = Colors.Text, TextXAlignment = Enum.TextXAlignment.Left, Parent = trigger,
+	})
+	local chev = mk("TextLabel", {
+		AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -10, 0.5, 0),
+		Size = UDim2.fromOffset(16, 16), BackgroundTransparency = 1, BorderSizePixel = 0,
+		Text = "▾", FontFace = FingerPaint, TextSize = 12, TextColor3 = Colors.TextDim, Parent = trigger,
+	})
+
+	local rowH = 30
+	local actionH = 32
+	local panelH = math.min(#options * rowH + actionH + 8, 280)
+	local panel = mk("ScrollingFrame", {
+		Size = UDim2.fromOffset(200, 0), BackgroundColor3 = Colors.TitleBar,
+		BackgroundTransparency = 0.05, BorderSizePixel = 0, Visible = false,
+		ScrollBarThickness = 2, ScrollBarImageColor3 = LINE,
+		ScrollBarImageTransparency = 0.55,
+		CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y,
+		ZIndex = 950, Parent = PopupLayer,
+	})
+	corner(panel, 9)
+	stroke(panel, Colors.RowStroke, 1, 0.3)
+	mk("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 2), Parent = panel })
+	mk("UIPadding", { PaddingTop = UDim.new(0, 4), PaddingBottom = UDim.new(0, 4), Parent = panel })
+
+	local entry = { panel = panel, isOpen = false, closing = false, width = 0, triggers = { trigger } }
+
+	entry.closeFn = function(instant)
+		TweenService:Create(chev, Tw.soft, { Rotation = 0 }):Play()
+		TweenService:Create(trSt, Tw.soft, { Transparency = 0.4, Color = Colors.RowStroke }):Play()
+		if instant then
+			panel.Visible = false
+			panel.Size = UDim2.fromOffset(entry.width or 200, 0)
+			entry.closing = false
+		else
+			local t = TweenService:Create(panel, Tw.listIn, {
+				Size = UDim2.fromOffset(entry.width or 200, 0), BackgroundTransparency = 1
+			})
+			t:Play()
+			t.Completed:Connect(function()
+				if entry.closing then
+					panel.Visible = false
+					panel.BackgroundTransparency = 0.05
+					entry.closing = false
+				end
+			end)
+		end
+	end
+
+	local function openDrop()
+		closeAll(true)
+		local abs = trigger.AbsolutePosition
+		local sz = trigger.AbsoluteSize
+		entry.width = sz.X
+		panel.Size = UDim2.fromOffset(sz.X, 0)
+		panel.Position = UDim2.fromOffset(abs.X, abs.Y + sz.Y + 4)
+		panel.Visible = true
+		panel.BackgroundTransparency = 1
+		entry.isOpen = true entry.closing = false
+		table.insert(OpenPops, entry)
+		TweenService:Create(chev, Tw.soft, { Rotation = 180 }):Play()
+		TweenService:Create(trSt, Tw.snap, { Transparency = 0.15, Color = LINE }):Play()
+		TweenService:Create(panel, Tw.list, {
+			Size = UDim2.fromOffset(sz.X, panelH), BackgroundTransparency = 0.05
+		}):Play()
+	end
+
+	local items = {}
+
+	local function refreshItem(opt)
+		local d = items[opt]
+		if not d then return end
+		d.mark.Visible = selected[opt] == true
+		TweenService:Create(d.lbl, Tw.snap, {
+			TextColor3 = selected[opt] and Colors.Text or Colors.TextDim
+		}):Play()
+	end
+
+	for i, opt in ipairs(options) do
+		local item = mk("TextButton", {
+			Size = UDim2.new(1, -8, 0, rowH - 2),
+			BackgroundTransparency = 1, BorderSizePixel = 0, Text = "", AutoButtonColor = false,
+			LayoutOrder = i, Parent = panel,
+		})
+		local chk = mk("Frame", {
+			Position = UDim2.fromOffset(8, math.floor((rowH - 2 - 14) / 2)),
+			Size = UDim2.fromOffset(14, 14),
+			BackgroundColor3 = Colors.Button, BackgroundTransparency = 0.2,
+			BorderSizePixel = 0, Parent = item,
+		})
+		corner(chk, 3)
+		stroke(chk, Colors.RowStroke, 1, 0.4)
+		local mark = mk("TextLabel", {
+			Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, BorderSizePixel = 0,
+			Text = "✓", FontFace = FingerPaint, TextSize = 11, TextColor3 = LINE,
+			Visible = selected[opt] == true, Parent = chk,
+		})
+		local itemLbl = mk("TextLabel", {
+			Position = UDim2.fromOffset(30, 0), Size = UDim2.new(1, -38, 1, 0),
+			BackgroundTransparency = 1, BorderSizePixel = 0,
+			Text = tostring(opt), FontFace = FingerPaint,
+			TextSize = 13,
+			TextColor3 = selected[opt] and Colors.Text or Colors.TextDim,
+			TextXAlignment = Enum.TextXAlignment.Left, Parent = item,
+		})
+		items[opt] = { item = item, mark = mark, lbl = itemLbl }
+
+		item.MouseEnter:Connect(function()
+			TweenService:Create(itemLbl, Tw.snap, { TextColor3 = Colors.TextHighlight }):Play()
+		end)
+		item.MouseLeave:Connect(function()
+			TweenService:Create(itemLbl, Tw.soft, {
+				TextColor3 = selected[opt] and Colors.Text or Colors.TextDim
+			}):Play()
+		end)
+		item.MouseButton1Click:Connect(function()
+			play("click")
+			selected[opt] = not selected[opt]
+			refreshItem(opt)
+			triggerLbl.Text = summaryText()
+			if cb then cb(selected) end
+		end)
+	end
+
+	local actions = mk("Frame", {
+		Size = UDim2.new(1, -8, 0, actionH - 4),
+		BackgroundTransparency = 1, BorderSizePixel = 0,
+		LayoutOrder = #options + 1, Parent = panel,
+	})
+	local function actionBtn(txt, pos)
+		local b = mk("TextButton", {
+			Position = pos, Size = UDim2.new(0.5, -6, 1, -4),
+			BackgroundColor3 = Colors.Button, BackgroundTransparency = 0.2,
+			BorderSizePixel = 0, Text = txt, FontFace = FingerPaint,
+			TextSize = 12, TextColor3 = Colors.Text, AutoButtonColor = false, Parent = actions,
+		})
+		corner(b, 6)
+		stroke(b, Colors.RowStroke, 1, 0.5)
+		return b
+	end
+	local allBtn = actionBtn("Select All", UDim2.new(0, 4, 0, 2))
+	local noneBtn = actionBtn("Clear", UDim2.new(0.5, 2, 0, 2))
+
+	allBtn.MouseButton1Click:Connect(function()
+		play("click")
+		for _, opt in ipairs(options) do selected[opt] = true end
+		for opt in pairs(items) do refreshItem(opt) end
+		triggerLbl.Text = summaryText()
+		if cb then cb(selected) end
+	end)
+	noneBtn.MouseButton1Click:Connect(function()
+		play("click")
+		for _, opt in ipairs(options) do selected[opt] = false end
+		for opt in pairs(items) do refreshItem(opt) end
+		triggerLbl.Text = summaryText()
+		if cb then cb(selected) end
+	end)
+
+	trigger.MouseButton1Click:Connect(function()
+		play("click")
+		if entry.isOpen then closeOne(entry, false) else openDrop() end
+	end)
+
+	return {
+		Set = function(t)
+			selected = {}
+			for k, v in pairs(t or {}) do
+				if v then selected[k] = true end
+			end
+			for opt in pairs(items) do refreshItem(opt) end
+			triggerLbl.Text = summaryText()
+			if cb then cb(selected) end
+		end,
+		Get = function() return selected end,
+	}
+end
+
 	local function colorpicker(par, title, def, ord, cb)
 		def = def or Color3.fromRGB(160,160,170)
 		local row = mk("Frame", {
@@ -1633,6 +1849,11 @@ function Library:CreateWindow(opts)
 			local el = dropdown(frame, o.Title or "Dropdown", o.Options or {}, o.Default, nextO, o.Callback)
 			register(el, o.Flag) return el
 		end
+		function Tab:CreateMultiDropdown(o)
+	o = o or {} nextO += 1
+	local el = multiDropdown(frame, o.Title or "Multi", o.Options or {}, o.Default, nextO, o.Callback)
+	register(el, o.Flag) return el
+end
 		function Tab:CreateColorPicker(o)
 			o = o or {} nextO += 1
 			local el = colorpicker(frame, o.Title or "Color", o.Default or Color3.fromRGB(160,160,170), nextO, o.Callback)
