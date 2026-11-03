@@ -1247,9 +1247,8 @@ function Library:CreateWindow(opts)
 			Get = function() return selected end,
 		}
 	end
-
-local multiDropdownCode = [==[
-local function multiDropdown(par, title, options, defaults, ord, cb)
+		
+	local function multiDropdown(par, title, options, defaults, ord, cb)
 	options = options or {}
 	local selected = {}
 	for k, v in pairs(defaults or {}) do
