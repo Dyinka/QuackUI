@@ -7,24 +7,55 @@ local HttpService      = game:GetService("HttpService")
 local TextService      = game:GetService("TextService")
 local LocalPlayer      = Players.LocalPlayer
 
-for _, g in ipairs(LocalPlayer:WaitForChild("PlayerGui"):GetChildren()) do
-	if g.Name == "FingerPaintUI" or g.Name == "FingerPaintLoader"
-		or g.Name:find("Cryo") or g.Name:find("Quack") then
-		g:Destroy()
+local Library = {}
+
+-- ═══════════════════════════════════════════════════════════
+-- STEALTH helpers — random names, high DisplayOrder
+-- ═══════════════════════════════════════════════════════════
+local function _rand(n)
+	n = n or 10
+	local t = {}
+	for i = 1, n do
+		t[i] = string.char(97 + math.random(0, 25))
+	end
+	return table.concat(t)
+end
+
+local function stealthName(prefix)
+	return (prefix or "x") .. _rand(10) .. tostring(math.random(100, 999))
+end
+
+-- Track our guis without distinctive names
+local _owned = setmetatable({}, { __mode = "k" })
+function Library._mark(gui)
+	if gui then _owned[gui] = true end
+	return gui
+end
+function Library._isOurs(gui)
+	return gui and _owned[gui] == true
+end
+
+-- Session tag for our GUIs (random each inject — not a fixed "Quack" string)
+local OWN_ATTR = "a" .. _rand(8)
+_G.__QX_ATTR = _G.__QX_ATTR or OWN_ATTR
+OWN_ATTR = _G.__QX_ATTR
+
+do
+	local pg = LocalPlayer:WaitForChild("PlayerGui")
+	for _, g in ipairs(pg:GetChildren()) do
+		if g:GetAttribute(OWN_ATTR) == true then
+			pcall(function() g:Destroy() end)
+		end
 	end
 end
 task.wait()
 
-local Library = {}
-
-local FingerPaint
-do
-	local ok, res = pcall(function() return Font.fromId(12187375716) end)
-	FingerPaint = (ok and typeof(res) == "Font") and res or Enum.Font.GothamBold
-end
-
+-- Default font: stock Gotham (less fingerprint). Custom font only if explicitly enabled later.
+local FingerPaint = Enum.Font.GothamBold
 local LINE = Color3.fromRGB(235, 235, 240)
 local DUCK_ID = "rbxassetid://71109437053861"
+-- Z order above almost all game UI
+local Z_TOP = 2147483647
 
 local Themes = {
 	Charcoal = {
@@ -127,10 +158,13 @@ function Library:CreateLoader(opts)
 	local FloatId  = opts.FloatImage or DUCK_ID
 
 	local gui = mk("ScreenGui", {
-		Name = "FingerPaintLoader", ResetOnSpawn = false, IgnoreGuiInset = true,
+		Name = stealthName("ld"), ResetOnSpawn = false, IgnoreGuiInset = true,
+		DisplayOrder = Z_TOP,
 		ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
 		Parent = LocalPlayer:WaitForChild("PlayerGui"),
 	})
+	gui:SetAttribute(OWN_ATTR, true)
+	Library._mark(gui)
 
 	local bg = mk("Frame", {
 		Size = UDim2.fromScale(1,1), BackgroundColor3 = Color3.fromRGB(8,8,10),
@@ -251,10 +285,30 @@ function Library:CreateWindow(opts)
 	local SidebarTrans  = opts.SidebarTransparency or 0.28
 	local CornerR       = opts.CornerRadius or 14
 	local SoundEnabled  = opts.SoundEnabled ~= false
-	local ShowWatermark = opts.ShowWatermark ~= false
-	local ShowDropBtn   = opts.ShowDropButton ~= false
-	local HeaderImage   = opts.HeaderImage or DUCK_ID
-	local FloatImage    = opts.FloatImage or DUCK_ID
+	-- Stealth defaults: less visual fingerprint unless user opts in
+	local StealthMode   = opts.Stealth ~= false  -- default ON
+	local ShowWatermark = opts.ShowWatermark == true  -- default OFF
+	local ShowDropBtn   = opts.ShowDropButton == true -- default OFF in stealth
+	if opts.ShowDropButton ~= nil and not StealthMode then
+		ShowDropBtn = opts.ShowDropButton ~= false
+	end
+	if not StealthMode then
+		ShowWatermark = opts.ShowWatermark ~= false
+		ShowDropBtn   = opts.ShowDropButton ~= false
+	end
+	local HeaderImage   = opts.HeaderImage
+	local FloatImage    = opts.FloatImage
+	if not StealthMode then
+		HeaderImage = HeaderImage or DUCK_ID
+		FloatImage  = FloatImage or DUCK_ID
+	end
+	HeaderImage = HeaderImage or ""
+	FloatImage  = FloatImage or ""
+	-- custom font only when not stealth or explicitly requested
+	if opts.UseCustomFont == true or (not StealthMode and opts.UseCustomFont ~= false) then
+		local ok, res = pcall(function() return Font.fromId(12187375716) end)
+		if ok and typeof(res) == "Font" then FingerPaint = res end
+	end
 
 	-- dense layout
 	local ROW_H   = 44
@@ -306,10 +360,27 @@ function Library:CreateWindow(opts)
 	end
 
 	local ScreenGui = mk("ScreenGui", {
-		Name = "FingerPaintUI", ResetOnSpawn = false, IgnoreGuiInset = true,
+		Name = stealthName("ui"), ResetOnSpawn = false, IgnoreGuiInset = true,
+		DisplayOrder = Z_TOP,
 		ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
 		Parent = LocalPlayer:WaitForChild("PlayerGui"),
 	})
+	ScreenGui:SetAttribute(OWN_ATTR, true)
+	Library._mark(ScreenGui)
+
+
+	-- keep above game UI (some scripts lower foreign DisplayOrder)
+	task.spawn(function()
+		while ScreenGui and ScreenGui.Parent do
+			if ScreenGui.DisplayOrder < Z_TOP - 10 then
+				ScreenGui.DisplayOrder = Z_TOP
+			end
+			if not ScreenGui.Enabled then
+				ScreenGui.Enabled = true
+			end
+			task.wait(0.5)
+		end
+	end)
 
 	local PopupLayer = mk("Frame", {
 		Name = "PopupLayer", Size = UDim2.fromScale(1,1),
