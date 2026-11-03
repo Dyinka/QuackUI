@@ -291,27 +291,14 @@ function Library:CreateWindow(opts)
 	local SidebarTrans  = opts.SidebarTransparency or 0.28
 	local CornerR       = opts.CornerRadius or 14
 	local SoundEnabled  = opts.SoundEnabled ~= false
-	-- Stealth defaults: less visual fingerprint unless user opts in
+	-- Stealth = random names + top DisplayOrder only (mascot/UI stay)
 	local StealthMode   = opts.Stealth ~= false  -- default ON
-	local ShowWatermark = opts.ShowWatermark == true  -- default OFF
-	local ShowDropBtn   = opts.ShowDropButton == true -- default OFF in stealth
-	if opts.ShowDropButton ~= nil and not StealthMode then
-		ShowDropBtn = opts.ShowDropButton ~= false
-	end
-	if not StealthMode then
-		ShowWatermark = opts.ShowWatermark ~= false
-		ShowDropBtn   = opts.ShowDropButton ~= false
-	end
-	local HeaderImage   = opts.HeaderImage
-	local FloatImage    = opts.FloatImage
-	if not StealthMode then
-		HeaderImage = HeaderImage or DUCK_ID
-		FloatImage  = FloatImage or DUCK_ID
-	end
-	HeaderImage = HeaderImage or ""
-	FloatImage  = FloatImage or ""
-	-- custom font only when not stealth or explicitly requested
-	if opts.UseCustomFont == true or (not StealthMode and opts.UseCustomFont ~= false) then
+	local ShowWatermark = opts.ShowWatermark == true  -- watermark still off by default
+	local ShowDropBtn   = opts.ShowDropButton ~= false  -- floating duck button ON
+	local HeaderImage   = opts.HeaderImage or DUCK_ID   -- header duck ON
+	local FloatImage    = opts.FloatImage or DUCK_ID    -- loader/float duck ON
+	-- optional custom font
+	if opts.UseCustomFont == true then
 		local ok, res = pcall(function() return Font.fromId(12187375716) end)
 		if ok and typeof(res) == "Font" then FingerPaint = res end
 	end
