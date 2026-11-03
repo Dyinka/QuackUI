@@ -1248,7 +1248,10 @@ function Library:CreateWindow(opts)
 		}
 	end
 		
-	local function multiDropdown(par, title, options, defaults, ord, cb)
+local multiDropdownCode = [
+-- Floating multi-select dropdown. Same visual as single dropdown.
+-- Auto-flips upward if the panel bottom would exceed PopupLayer/viewport bounds.
+local function multiDropdown(par, title, options, defaults, ord, cb)
 	options = options or {}
 	local selected = {}
 	for k, v in pairs(defaults or {}) do
@@ -1267,7 +1270,6 @@ function Library:CreateWindow(opts)
 		return picked[1] .. ", " .. picked[2] .. " +" .. (n - 2) .. " more"
 	end
 
-	-- row + trigger
 	local row = mk("Frame", {
 		Size = UDim2.new(1, 0, 0, ROW_H), BackgroundTransparency = 1, BorderSizePixel = 0,
 		LayoutOrder = ord or 0, Parent = par,
@@ -1295,11 +1297,10 @@ function Library:CreateWindow(opts)
 	local chev = mk("TextLabel", {
 		AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -10, 0.5, 0),
 		Size = UDim2.fromOffset(16, 16), BackgroundTransparency = 1, BorderSizePixel = 0,
-		Text = "\u{25BE}", FontFace = FingerPaint, TextSize = 12,
+		Text = "\226\150\190", FontFace = FingerPaint, TextSize = 12,
 		TextColor3 = Colors.TextDim, Parent = trigger,
 	})
 
-	-- floating panel
 	local itemH = 28
 	local itemGap = 2
 	local actionsH = 34
@@ -1360,7 +1361,6 @@ function Library:CreateWindow(opts)
 		end
 	end
 
-	-- bounds: PopupLayer if it's a sized GuiObject, else camera viewport
 	local function getBounds()
 		local top, bottom = 0, 1080
 		pcall(function()
@@ -1417,7 +1417,6 @@ function Library:CreateWindow(opts)
 		}):Play()
 	end
 
-	-- items
 	local itemRefs = {}
 	local function refreshItem(opt)
 		local r = itemRefs[opt]
@@ -1445,7 +1444,7 @@ function Library:CreateWindow(opts)
 		stroke(chk, Colors.RowStroke, 1, 0.4)
 		local mark = mk("TextLabel", {
 			Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, BorderSizePixel = 0,
-			Text = "\u{2713}", FontFace = FingerPaint, TextSize = 11,
+			Text = "\226\156\147", FontFace = FingerPaint, TextSize = 11,
 			TextColor3 = LINE, Visible = selected[opt] == true, Parent = chk,
 		})
 		local lbl = mk("TextLabel", {
@@ -1474,7 +1473,6 @@ function Library:CreateWindow(opts)
 		end)
 	end
 
-	-- actions row
 	local actions = mk("Frame", {
 		Size = UDim2.new(1, -8, 0, actionsH - 6),
 		BackgroundTransparency = 1, BorderSizePixel = 0,
@@ -1529,7 +1527,13 @@ function Library:CreateWindow(opts)
 	}
 end
 
+function Tab:CreateMultiDropdown(o)
+	o = o or {} nextO += 1
+	local el = multiDropdown(frame, o.Title or "Multi", o.Options or {}, o.Default, nextO, o.Callback)
+	register(el, o.Flag) return el
+end
 
+]
 
 	local function colorpicker(par, title, def, ord, cb)
 		def = def or Color3.fromRGB(160,160,170)
