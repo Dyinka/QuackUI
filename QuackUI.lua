@@ -1302,7 +1302,7 @@ local function multiDropdown(par, title, options, defaults, ord, cb)
 	local itemGap = 2
 	local actionsH = 34
 	local contentH = #options * (itemH + itemGap) + actionsH + 8
-	local panelH = math.min(contentH, 80, 220)
+	local panelH = math.min(contentH, 220)
 
 	local panel = mk("ScrollingFrame", {
 		Size = UDim2.fromOffset(200, 0),
