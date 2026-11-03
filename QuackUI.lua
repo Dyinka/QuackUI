@@ -10,7 +10,7 @@ local LocalPlayer      = Players.LocalPlayer
 local Library = {}
 
 -- ═══════════════════════════════════════════════════════════
--- STEALTH helpers — random names, high DisplayOrder
+-- STEALTH helpers — random names, high DisplayOrder 67
 -- ═══════════════════════════════════════════════════════════
 local function _rand(n)
 	n = n or 10
