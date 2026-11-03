@@ -1302,7 +1302,7 @@ local function multiDropdown(par, title, options, defaults, ord, cb)
 	local itemGap = 2
 	local actionsH = 34
 	local contentH = #options * (itemH + itemGap) + actionsH + 8
-	local panelH = math.min(contentH, 300)
+	local panelH = math.min(contentH, 80, 220)
 
 	local panel = mk("ScrollingFrame", {
 		Size = UDim2.fromOffset(200, 0),
@@ -1382,8 +1382,8 @@ local function multiDropdown(par, title, options, defaults, ord, cb)
 		local sz = trigger.AbsoluteSize
 		entry.width = sz.X
 
-		local yBelow = abs.Y + sz.Y + 4
-		local yAbove = abs.Y - 4
+		local yBelow = abs.Y + sz.Y + 2
+		local yAbove = abs.Y - 2
 
 		local boundsTop, boundsBottom = getBounds()
 		local needsFlip = (yBelow + panelH) > boundsBottom
