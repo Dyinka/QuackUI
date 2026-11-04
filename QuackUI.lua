@@ -377,7 +377,8 @@ function Library:CreateWindow(opts)
 
 	local PopupLayer = mk("Frame", {
 		Name = "PopupLayer", Size = UDim2.fromScale(1,1),
-		BackgroundTransparency = 1, BorderSizePixel = 0, ZIndex = 900, Parent = ScreenGui,
+		BackgroundTransparency = 1, BorderSizePixel = 0, ZIndex = 900,
+		Active = false, Selectable = false, Parent = ScreenGui,
 	})
 
 	local OpenPops, ConfigEls = {}, {}
@@ -470,7 +471,9 @@ function Library:CreateWindow(opts)
 			Name = "DropButton", AnchorPoint = Vector2.new(0.5,0),
 			Position = UDim2.new(0.5,0,0,12), Size = UDim2.fromOffset(52,52),
 			BackgroundColor3 = Colors.Button, BackgroundTransparency = 0.15,
-			Text = "", AutoButtonColor = false, BorderSizePixel = 0, ZIndex = 10, Parent = ScreenGui,
+			Text = "", AutoButtonColor = false, BorderSizePixel = 0,
+			Visible = true, Active = true, Selectable = true,
+			ZIndex = 20000, Parent = ScreenGui,
 		})
 		corner(DropBtn, 14) stroke(DropBtn, Colors.ButtonStroke, 1.4, 0.3)
 
@@ -478,7 +481,7 @@ function Library:CreateWindow(opts)
 			AnchorPoint = Vector2.new(0.5,0.5), Position = UDim2.fromScale(0.5,0.5),
 			Size = UDim2.fromOffset(32,32), BackgroundTransparency = 1, BorderSizePixel = 0,
 			Image = FloatImage, ImageTransparency = 0, ScaleType = Enum.ScaleType.Fit,
-			ZIndex = 12, Parent = DropBtn,
+			ZIndex = 20001, Parent = DropBtn,
 		})
 		local duckSc = mk("UIScale", {Scale = 1, Parent = duck})
 
