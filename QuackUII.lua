@@ -999,7 +999,7 @@ function Library:CreateWindow(opts)
 			BorderSizePixel = 0, Parent = row,
 		})
 		corner(track, 13)
-		local tStroke = stroke(track, Colors.TextHighlight, 1.2, 0.75)
+		local tStroke = gradStroke(track, Colors.AccentOff, Colors.TextHighlight, 1.2, 0.6)
 		local knob = mk("Frame", {
 			AnchorPoint = Vector2.new(0,0.5),
 			Position = def and UDim2.new(1,-21,0.5,0) or UDim2.new(0,3,0.5,0),
@@ -1086,10 +1086,10 @@ function Library:CreateWindow(opts)
 		grad(fill, Colors.AccentOff, Colors.SliderFill, 0)
 		local knob = mk("Frame", {
 			AnchorPoint = Vector2.new(0.5,0.5), Position = UDim2.fromScale(kx(initRx),0.5),
-			Size = UDim2.fromOffset(26,16), BackgroundColor3 = Colors.Accent,
+			Size = UDim2.fromOffset(30,14), BackgroundColor3 = Colors.Accent,
 			BorderSizePixel = 0, ZIndex = 3, Parent = track,
 		})
-		corner(knob, 6) stroke(knob, Colors.TextHighlight, 2, 0.25)
+		corner(knob, 7) stroke(knob, Colors.TextHighlight, 2, 0.25)
 		local bubble = mk("TextLabel", {
 			AnchorPoint = Vector2.new(0.5,1), Position = UDim2.new(kx(initRx),0,0,-24), Size = UDim2.fromOffset(48,22),
 			BackgroundTransparency = 1, BorderSizePixel = 0, Text = tostring(def), FontFace = FingerPaint,
@@ -1098,7 +1098,7 @@ function Library:CreateWindow(opts)
 		local bubbleSc = mk("UIScale", {Scale = 0.7, Parent = bubble})
 		local function springHandle(pressed)
 			TweenService:Create(knob, Tw.spring, {
-				Size = pressed and UDim2.fromOffset(32,14) or UDim2.fromOffset(26,16)
+				Size = pressed and UDim2.fromOffset(38,12) or UDim2.fromOffset(30,14)
 			}):Play()
 			TweenService:Create(track, Tw.spring, {
 				Size = UDim2.new(1,0,0,pressed and 22 or 16)
@@ -1170,86 +1170,46 @@ function Library:CreateWindow(opts)
 
 	local function button(par, title, ord, cb)
 		local b = mk("TextButton", {
-			Size = UDim2.new(1, 0, 0, BTN_H),
-			BackgroundColor3 = Colors.Button,
-			BackgroundTransparency = 0.12,
-			BorderSizePixel = 0,
-			Text = "",
-			AutoButtonColor = false,
-			LayoutOrder = ord or 0,
-			ClipsDescendants = true,
-			Parent = par,
+			Size = UDim2.new(1, 0, 0, BTN_H + 8),
+			BackgroundColor3 = Colors.Button:Lerp(Colors.Text, 0.08),
+			BackgroundTransparency = 0.38,
+			BorderSizePixel = 0, Text = "", AutoButtonColor = false,
+			LayoutOrder = ord or 0, ClipsDescendants = true, Parent = par,
 		})
 		corner(b, 12)
-		local st = stroke(b, Colors.RowStroke, 1, 0.35)
-
+		local st = gradStroke(b, Colors.AccentOff, Colors.Accent, 1, 0.62)
+		local bSc = mk("UIScale", {Scale = 1, Parent = b})
 		local lbl = mk("TextLabel", {
-			Size = UDim2.fromScale(1, 1),
-			BackgroundTransparency = 1,
-			BorderSizePixel = 0,
-			Text = title,
-			FontFace = FingerPaint,
-			TextSize = 15,
-			TextColor3 = Colors.Text,
-			ZIndex = 2,
-			Parent = b,
+			Position = UDim2.fromOffset(10, 0), Size = UDim2.new(1, -50, 1, 0),
+			BackgroundTransparency = 1, BorderSizePixel = 0, Text = title,
+			FontFace = FingerPaint, TextSize = 15, TextColor3 = Colors.Text,
+			TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 2, Parent = b,
 		})
-
-		local line = mk("Frame", {
-			AnchorPoint = Vector2.new(0.5, 1),
-			Position = UDim2.new(0.5, 0, 1, 0),
-			Size = UDim2.new(0, 0, 0, 2),
-			BackgroundColor3 = Colors.Accent,
-			BorderSizePixel = 0,
-			ZIndex = 3,
-			Parent = b,
-		})
-		corner(line, 1)
+		local arrow = chevron(b, Colors.Accent)
+		arrow.Rotation = -90
+		arrow.Position = UDim2.new(1, -12, 0.5, 0)
 
 		b.MouseEnter:Connect(function()
 			playHover()
 			TweenService:Create(b, Tw.soft, {
-				BackgroundColor3 = Colors.AccentOff,
-				BackgroundTransparency = 0.04,
+				BackgroundColor3 = Colors.AccentOff, BackgroundTransparency = 0.2,
 			}):Play()
-			TweenService:Create(st, Tw.soft, { Transparency = 0.2, Color = Colors.Accent }):Play()
-			TweenService:Create(lbl, Tw.soft, { TextColor3 = Colors.TextHighlight }):Play()
-			TweenService:Create(line, Tw.spring, { Size = UDim2.new(0.5, 0, 0, 2) }):Play()
+			TweenService:Create(st, Tw.soft, {Transparency = 0.25}):Play()
+			TweenService:Create(lbl, Tw.soft, {TextColor3 = Colors.TextHighlight}):Play()
 		end)
-
 		b.MouseLeave:Connect(function()
 			TweenService:Create(b, Tw.soft, {
-				BackgroundColor3 = Colors.Button,
-				BackgroundTransparency = 0.12,
+				BackgroundColor3 = Colors.Button:Lerp(Colors.Text, 0.08), BackgroundTransparency = 0.38,
 			}):Play()
-			TweenService:Create(st, Tw.soft, { Transparency = 0.35, Color = Colors.RowStroke }):Play()
-			TweenService:Create(lbl, Tw.soft, { TextColor3 = Colors.Text }):Play()
-			TweenService:Create(line, Tw.soft, { Size = UDim2.new(0, 0, 0, 2) }):Play()
+			TweenService:Create(st, Tw.soft, {Transparency = 0.62}):Play()
+			TweenService:Create(lbl, Tw.soft, {TextColor3 = Colors.Text}):Play()
 		end)
-
 		b.MouseButton1Down:Connect(function()
-			TweenService:Create(b, Tw.press, {
-				BackgroundTransparency = 0,
-				BackgroundColor3 = Colors.ButtonStroke,
-			}):Play()
-			TweenService:Create(line, Tw.press, { Size = UDim2.new(0.65, 0, 0, 2) }):Play()
+			bSc.Scale = 0.96
+			TweenService:Create(bSc, Tw.spring, {Scale = 1}):Play()
 		end)
-
-		b.MouseButton1Up:Connect(function()
-			TweenService:Create(b, Tw.soft, {
-				BackgroundTransparency = 0.04,
-				BackgroundColor3 = Color3.fromRGB(48, 48, 54),
-			}):Play()
-			TweenService:Create(line, Tw.spring, { Size = UDim2.new(0.5, 0, 0, 2) }):Play()
-		end)
-
 		b.MouseButton1Click:Connect(function()
 			play("click")
-			TweenService:Create(line, Tw.press, { BackgroundTransparency = 0.4 }):Play()
-			task.delay(0.1, function()
-				if not alive then return end
-				TweenService:Create(line, Tw.soft, { BackgroundTransparency = 0 }):Play()
-			end)
 			if cb then cb() end
 		end)
 	end
@@ -1811,13 +1771,13 @@ end
 			corner(fill, 6)
 			local kn = mk("Frame", {
 				AnchorPoint = Vector2.new(0.5,0.5), Position = UDim2.fromScale(init,0.5),
-				Size = UDim2.fromOffset(10,20), Rotation = 90, BackgroundColor3 = Colors.Accent,
+				Size = UDim2.fromOffset(18,10), BackgroundColor3 = Colors.Accent,
 				BorderSizePixel = 0, Parent = track,
 			})
 			corner(kn, 5)
 			local function springKn(pressed)
 				TweenService:Create(kn, Tw.spring, {
-					Size = pressed and UDim2.fromOffset(14,16) or UDim2.fromOffset(10,20)
+					Size = pressed and UDim2.fromOffset(24,8) or UDim2.fromOffset(18,10)
 				}):Play()
 			end
 			local valLbl = mk("TextLabel", {
@@ -1973,8 +1933,8 @@ end
 		})
 		local listLayout = mk("UIListLayout", {SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0,6), Parent = content})
 		mk("UIPadding", {
-			PaddingLeft = UDim.new(0,10), PaddingRight = UDim.new(0,10),
-			PaddingBottom = UDim.new(0,10), Parent = content,
+			PaddingLeft = UDim.new(0,6), PaddingRight = UDim.new(0,6),
+			PaddingBottom = UDim.new(0,8), Parent = content,
 		})
 
 		local Group = {}
