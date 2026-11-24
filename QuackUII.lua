@@ -1,3 +1,4 @@
+local Library = (function()
 local Players          = game:GetService("Players")
 local TweenService     = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -956,14 +957,33 @@ function Library:CreateWindow(opts)
 
 	-- ── components ──────────────────────────────────────────
 	local function elemRow(par, ord, h)
+		local base = Colors.Button:Lerp(Colors.Text, 0.08)
 		local row = mk("Frame", {
-			Size = UDim2.new(1,0,0,h), BackgroundColor3 = Colors.Button:Lerp(Colors.Text, 0.08),
+			Size = UDim2.new(1,0,0,h), BackgroundColor3 = base,
 			BackgroundTransparency = 0.38, BorderSizePixel = 0,
 			LayoutOrder = ord or 0, Parent = par,
 		})
 		corner(row, 12)
-		gradStroke(row, Colors.AccentOff, Colors.Accent, 1, 0.62)
-		return row
+		local st = gradStroke(row, Colors.AccentOff, Colors.Accent, 1, 0.62)
+		local hit = mk("TextButton", {
+			Size = UDim2.fromScale(1,1), BackgroundTransparency = 1,
+			BorderSizePixel = 0, Text = "", AutoButtonColor = false,
+			ZIndex = 0, Parent = row,
+		})
+		hit.MouseEnter:Connect(function()
+			playHover()
+			TweenService:Create(row, Tw.soft, {
+				BackgroundColor3 = Colors.Button:Lerp(Colors.Text, 0.14), BackgroundTransparency = 0.26
+			}):Play()
+			TweenService:Create(st, Tw.soft, {Transparency = 0.3}):Play()
+		end)
+		hit.MouseLeave:Connect(function()
+			TweenService:Create(row, Tw.soft, {
+				BackgroundColor3 = base, BackgroundTransparency = 0.38
+			}):Play()
+			TweenService:Create(st, Tw.soft, {Transparency = 0.62}):Play()
+		end)
+		return row, hit
 	end
 	local function section(par, title, ord)
 		local s = mk("Frame", {Size = UDim2.new(1,0,0,20), BackgroundTransparency = 1, BorderSizePixel = 0, LayoutOrder = ord or 0, Parent = par})
@@ -977,7 +997,7 @@ function Library:CreateWindow(opts)
 	local function toggle(par, title, desc, def, ord, cb)
 		local hasDesc = desc and desc ~= ""
 		local rowH = hasDesc and 54 or 44
-		local row = elemRow(par, ord, rowH)
+		local row, rowHit = elemRow(par, ord, rowH)
 		mk("TextLabel", {
 			Position = hasDesc and UDim2.fromOffset(10, 4) or UDim2.fromOffset(10, 0),
 			Size = hasDesc and UDim2.new(1,-74,0,18) or UDim2.new(1,-74,1,0),
@@ -1014,15 +1034,7 @@ function Library:CreateWindow(opts)
 			TweenService:Create(knob, Tw.spring, {Position = target, BackgroundColor3 = col}):Play()
 		end
 		local state = def or false
-		local hit = mk("TextButton", {Size = UDim2.new(1,0,1,0), BackgroundTransparency = 1, BorderSizePixel = 0, Text = "", Parent = row})
-		hit.MouseEnter:Connect(function()
-			playHover()
-			TweenService:Create(tStroke, Tw.snap, {Transparency = 0.35}):Play()
-		end)
-		hit.MouseLeave:Connect(function()
-			TweenService:Create(tStroke, Tw.snap, {Transparency = 1}):Play()
-		end)
-		hit.MouseButton1Click:Connect(function()
+		local function activate()
 			play("click")
 			state = not state
 			if state then
@@ -1033,7 +1045,8 @@ function Library:CreateWindow(opts)
 				jumpSpring(UDim2.new(0,3,0.5,0), Colors.KnobOff)
 			end
 			if cb then cb(state) end
-		end)
+		end
+		rowHit.MouseButton1Click:Connect(activate)
 		return {
 			Set = function(v)
 				state = v
@@ -1086,10 +1099,10 @@ function Library:CreateWindow(opts)
 		grad(fill, Colors.AccentOff, Colors.SliderFill, 0)
 		local knob = mk("Frame", {
 			AnchorPoint = Vector2.new(0.5,0.5), Position = UDim2.fromScale(kx(initRx),0.5),
-			Size = UDim2.fromOffset(30,14), BackgroundColor3 = Colors.Accent,
+			Size = UDim2.fromOffset(18,18), BackgroundColor3 = Colors.Accent,
 			BorderSizePixel = 0, ZIndex = 3, Parent = track,
 		})
-		corner(knob, 7) stroke(knob, Colors.TextHighlight, 2, 0.25)
+		corner(knob, 9) stroke(knob, Colors.TextHighlight, 2, 0.25)
 		local bubble = mk("TextLabel", {
 			AnchorPoint = Vector2.new(0.5,1), Position = UDim2.new(kx(initRx),0,0,-24), Size = UDim2.fromOffset(48,22),
 			BackgroundTransparency = 1, BorderSizePixel = 0, Text = tostring(def), FontFace = FingerPaint,
@@ -1098,7 +1111,7 @@ function Library:CreateWindow(opts)
 		local bubbleSc = mk("UIScale", {Scale = 0.7, Parent = bubble})
 		local function springHandle(pressed)
 			TweenService:Create(knob, Tw.spring, {
-				Size = pressed and UDim2.fromOffset(38,12) or UDim2.fromOffset(30,14)
+				Size = pressed and UDim2.fromOffset(24,24) or UDim2.fromOffset(18,18)
 			}):Play()
 			TweenService:Create(track, Tw.spring, {
 				Size = UDim2.new(1,0,0,pressed and 22 or 16)
@@ -1215,7 +1228,7 @@ function Library:CreateWindow(opts)
 	end
 
 	local function textbox(par, title, def, ord, cb)
-		local row = elemRow(par, ord, ROW_H + 10)
+		local row, rowHit = elemRow(par, ord, ROW_H + 10)
 		mk("TextLabel", {
 			Position = UDim2.fromOffset(10,2), Size = UDim2.new(1,-20,0,16), BackgroundTransparency = 1, BorderSizePixel = 0,
 			Text = title, FontFace = FingerPaint, TextSize = 15, TextColor3 = Colors.Text,
@@ -1242,11 +1255,14 @@ function Library:CreateWindow(opts)
 			TweenService:Create(fst, Tw.soft, {Transparency = 0.4, Color = Colors.RowStroke}):Play()
 			if cb then cb(box.Text) end
 		end)
+		rowHit.MouseButton1Click:Connect(function()
+			if not box:IsFocused() then box:CaptureFocus() end
+		end)
 		return {Set = function(v) box.Text = tostring(v or "") end, Get = function() return box.Text end}
 	end
 
 	local function keybind(par, title, def, ord, cb)
-		local row = elemRow(par, ord, 46)
+		local row, rowHit = elemRow(par, ord, 46)
 		mk("TextLabel", {
 			Position = UDim2.fromOffset(10,0), Size = UDim2.new(1,-100,1,0), BackgroundTransparency = 1, BorderSizePixel = 0,
 			Text = title, FontFace = FingerPaint, TextSize = 15, TextColor3 = Colors.Text,
@@ -1268,12 +1284,14 @@ function Library:CreateWindow(opts)
 		kb.MouseLeave:Connect(function()
 			if not listen then TweenService:Create(kst, Tw.soft, {Transparency = 0.4}):Play() end
 		end)
-		kb.MouseButton1Click:Connect(function()
+		local function startListen()
 			play("click")
 			listen = true
 			kb.Text = "..."
 			TweenService:Create(kst, Tw.snap, {Transparency = 0.1, Color = LINE}):Play()
-		end)
+		end
+		kb.MouseButton1Click:Connect(startListen)
+		rowHit.MouseButton1Click:Connect(startListen)
 		guard(UserInputService.InputBegan, function(inp, g)
 			if g or not listen then return end
 			if inp.UserInputType == Enum.UserInputType.Keyboard then
@@ -1294,7 +1312,7 @@ function Library:CreateWindow(opts)
 	local function dropdown(par, title, options, def, ord, cb)
 		options = options or {}
 		local selected = def or options[1] or ""
-		local row = elemRow(par, ord, ROW_H + 10)
+		local row, rowHit = elemRow(par, ord, ROW_H + 10)
 		mk("TextLabel", {
 			Position = UDim2.fromOffset(10,2), Size = UDim2.new(1,-20,0,16), BackgroundTransparency = 1, BorderSizePixel = 0,
 			Text = title, FontFace = FingerPaint, TextSize = 15, TextColor3 = Colors.Text,
@@ -1431,10 +1449,12 @@ function Library:CreateWindow(opts)
 			end)
 		end
 
-		trigger.MouseButton1Click:Connect(function()
+		local function activate()
 			play("click")
 			if entry.isOpen then closeOne(entry, false) else openDrop() end
-		end)
+		end
+		trigger.MouseButton1Click:Connect(activate)
+		rowHit.MouseButton1Click:Connect(activate)
 
 		return {
 			Set = function(v) selected = v triggerLbl.Text = tostring(v) if cb then cb(v) end end,
@@ -1461,7 +1481,7 @@ local function multiDropdown(par, title, options, defaults, ord, cb)
 		return picked[1] .. ", " .. picked[2] .. " +" .. (n - 2) .. " more"
 	end
 
-	local row = elemRow(par, ord, ROW_H + 10)
+	local row, rowHit = elemRow(par, ord, ROW_H + 10)
 	mk("TextLabel", {
 		Position = UDim2.fromOffset(10, 2), Size = UDim2.new(1, -20, 0, 16),
 		BackgroundTransparency = 1, BorderSizePixel = 0,
@@ -1697,10 +1717,12 @@ local function multiDropdown(par, title, options, defaults, ord, cb)
 		if cb then cb(selected) end
 	end)
 
-	trigger.MouseButton1Click:Connect(function()
+	local function activate()
 		play("click")
 		if entry.isOpen then closeOne(entry, false) else openDrop() end
-	end)
+	end
+	trigger.MouseButton1Click:Connect(activate)
+	rowHit.MouseButton1Click:Connect(activate)
 
 	return {
 		Set = function(t)
@@ -1718,7 +1740,7 @@ end
 
 	local function colorpicker(par, title, def, ord, cb)
 		def = def or Color3.fromRGB(160,160,170)
-		local row = elemRow(par, ord, 46)
+		local row, rowHit = elemRow(par, ord, 46)
 		mk("TextLabel", {
 			Position = UDim2.fromOffset(10,0), Size = UDim2.new(1,-54,1,0), BackgroundTransparency = 1, BorderSizePixel = 0,
 			Text = title, FontFace = FingerPaint, TextSize = 15, TextColor3 = Colors.Text,
@@ -1852,7 +1874,7 @@ end
 			end
 		end
 
-		preview.MouseButton1Click:Connect(function()
+		local function activate()
 			play("click")
 			if entry.isOpen then
 				closeOne(entry, false)
@@ -1871,7 +1893,9 @@ end
 					Size = UDim2.fromOffset(220, 138), BackgroundTransparency = 0.05
 				}):Play()
 			end
-		end)
+		end
+		preview.MouseButton1Click:Connect(activate)
+		rowHit.MouseButton1Click:Connect(activate)
 
 		return {
 			Set = function(c)
@@ -1911,17 +1935,17 @@ end
 			BorderSizePixel = 0, Text = "", AutoButtonColor = false, Parent = card,
 		})
 		mk("TextLabel", {
-			Position = UDim2.fromOffset(10, hasDesc and 4 or 0),
-			Size = UDim2.new(1,-70,0,18), BackgroundTransparency = 1, BorderSizePixel = 0,
+			Position = UDim2.fromOffset(0, hasDesc and 4 or 0),
+			Size = UDim2.new(1,0,0,18), BackgroundTransparency = 1, BorderSizePixel = 0,
 			Text = title, FontFace = FingerPaint, TextSize = 16, TextColor3 = Colors.Text,
-			TextXAlignment = Enum.TextXAlignment.Left, Parent = header,
+			TextXAlignment = Enum.TextXAlignment.Center, Parent = header,
 		})
 		if hasDesc then
 			mk("TextLabel", {
-				Position = UDim2.fromOffset(10, 24), Size = UDim2.new(1,-70,0,16),
+				Position = UDim2.fromOffset(0, 24), Size = UDim2.new(1,0,0,16),
 				BackgroundTransparency = 1, BorderSizePixel = 0, Text = desc,
 				FontFace = FingerPaint, TextSize = 12, TextColor3 = Colors.TextDim,
-				TextXAlignment = Enum.TextXAlignment.Left, Parent = header,
+				TextXAlignment = Enum.TextXAlignment.Center, Parent = header,
 			})
 		end
 		local chev = chevron(header, Colors.Accent)
@@ -2477,3 +2501,264 @@ end
 end
 
 return Library
+
+end)()
+
+local cfg = {
+	Title = "QuackHub",
+	Theme = "Sakura",
+	ToggleKey = Enum.KeyCode.K,
+	Watermark = true,
+	ConfigFolder = "QuackHubConfigs",
+}
+
+
+local flags = {}
+
+local function build()
+	local Window = Library:CreateWindow({
+		Title = cfg.Title,
+		Theme = cfg.Theme,
+		ToggleKey = cfg.ToggleKey,
+		Watermark = cfg.Title,
+		ShowWatermark = cfg.Watermark,
+		ConfigFolder = cfg.ConfigFolder,
+		Stealth = true,
+		ShowDropButton = true,
+	})
+
+	local Main = Window:CreateTab("main", "rbxassetid://10709751939")
+	local Inputs = Window:CreateTab("inputs")
+	local Configs = Window:CreateTab("configs")
+
+	local throw = Main:CreateGroup({
+		Title = "throw food",
+		Description = "auto throw control",
+		Default = true,
+	})
+
+	local autoThrow = throw:CreateToggle({
+		Title = "auto throw food",
+		Description = "throws food for you",
+		Default = false,
+		Flag = "auto_throw",
+		Callback = function(state)
+			flags.auto_throw = state
+		end,
+	})
+
+	throw:CreateKeybind({
+		Title = "toggle key",
+		Default = Enum.KeyCode.T,
+		Flag = "throw_key",
+		Callback = function(k)
+			flags.throw_key = k.Name
+		end,
+	})
+
+	local power = throw:CreateSlider({
+		Title = "throw power",
+		Min = 0,
+		Max = 100,
+		Default = 0,
+		Flag = "throw_power",
+		Callback = function(v)
+			flags.throw_power = v
+		end,
+	})
+
+	throw:CreateButton({
+		Title = "ping",
+		Callback = function()
+			Window:Notify("online", "all elements loaded", 3)
+		end,
+	})
+
+	local pullup = Main:CreateGroup({
+		Title = "pull-up bar",
+		Description = "workout control",
+	})
+
+	local autoTrain = pullup:CreateToggle({
+		Title = "auto train strength",
+		Description = "trains while you wait",
+		Default = false,
+		Flag = "auto_train",
+		Callback = function(state)
+			flags.auto_train = state
+		end,
+	})
+
+	pullup:CreateKeybind({
+		Title = "toggle key",
+		Default = Enum.KeyCode.B,
+		Flag = "train_key",
+		Callback = function(k)
+			flags.train_key = k.Name
+		end,
+	})
+
+	pullup:CreateToggle({
+		Title = "auto double bonus",
+		Description = "instantly taps the double button",
+		Default = false,
+		Flag = "double_bonus",
+		Callback = function(state)
+			flags.double_bonus = state
+		end,
+	})
+
+	pullup:CreateToggle({
+		Title = "stop workout",
+		Description = "stops active pull-up workout",
+		Default = false,
+		Flag = "stop_workout",
+		Callback = function(state)
+			flags.stop_workout = state
+		end,
+	})
+
+	Main:CreateButton({
+		Title = "read values",
+		Callback = function()
+			Window:Notify("values", "throw " .. tostring(power.Get()) .. " | auto " .. tostring(autoThrow.Get()) .. " | train " .. tostring(autoTrain.Get()), 4)
+		end,
+	})
+
+	Main:CreateButton({
+		Title = "toggle ui",
+		Callback = function()
+			Window:Toggle()
+		end,
+	})
+
+	local selection = Inputs:CreateGroup({
+		Title = "selection",
+		Description = "lists and colors",
+		Default = true,
+	})
+
+	local dropdown = selection:CreateDropdown({
+		Title = "dropdown",
+		Options = { "one", "two", "three" },
+		Default = "two",
+		Flag = "dropdown",
+		Callback = function(v)
+			flags.dropdown = v
+		end,
+	})
+
+	selection:CreateMultiDropdown({
+		Title = "multi dropdown",
+		Options = { "a", "b", "c", "d" },
+		Default = { "a", "b" },
+		Flag = "multi",
+		Callback = function(list)
+			flags.multi = list
+		end,
+	})
+
+	selection:CreateColorPicker({
+		Title = "color picker",
+		Default = Color3.fromRGB(206, 146, 166),
+		Flag = "color",
+		Callback = function(c)
+			flags.color = c
+		end,
+	})
+
+	local keyboard = Inputs:CreateGroup({
+		Title = "keyboard",
+		Description = "text and keybind",
+	})
+
+	local textbox = keyboard:CreateTextbox({
+		Title = "textbox",
+		Default = "hello",
+		Flag = "textbox",
+		Callback = function(t)
+			flags.textbox = t
+		end,
+	})
+
+	local keybind = keyboard:CreateKeybind({
+		Title = "keybind",
+		Default = Enum.KeyCode.P,
+		Flag = "keybind",
+		Callback = function(k)
+			flags.keybind = k.Name
+		end,
+	})
+
+	Inputs:CreateButton({
+		Title = "read inputs",
+		Callback = function()
+			Window:Notify("inputs", tostring(dropdown.Get()) .. " | " .. tostring(textbox.Get()) .. " | " .. tostring(keybind.Get()), 4)
+		end,
+	})
+
+	local cfgList = Configs:CreateConfigList({ Title = "config name", Default = "Main" })
+
+	local manager = Configs:CreateGroup({
+		Title = "config manager",
+		Description = "save load and delete",
+		Default = true,
+	})
+
+	manager:CreateButton({
+		Title = "save",
+		Callback = function()
+			Window:SaveConfig(cfgList.GetName())
+			Window:Notify("config", "saved " .. cfgList.GetName(), 2)
+		end,
+	})
+
+	manager:CreateButton({
+		Title = "load",
+		Callback = function()
+			Window:LoadConfig(cfgList.GetName())
+			Window:Notify("config", "loaded " .. cfgList.GetName(), 2)
+		end,
+	})
+
+	manager:CreateButton({
+		Title = "list",
+		Callback = function()
+			local names = Window:ListConfigs()
+			Window:Notify("configs", #names .. " found", 2)
+		end,
+	})
+
+	manager:CreateButton({
+		Title = "delete",
+		Callback = function()
+			Window:DeleteConfig(cfgList.GetName())
+			cfgList.Refresh()
+			Window:Notify("config", "deleted " .. cfgList.GetName(), 2)
+		end,
+	})
+
+	manager:CreateButton({
+		Title = "close ui",
+		Callback = function()
+			Window:Destroy()
+		end,
+	})
+
+	Window:Notify(cfg.Title, "ready", 3)
+
+	return Window
+end
+
+Library:CreateLoader({
+	Title = cfg.Title,
+	Subtitle = "initializing",
+	Theme = cfg.Theme,
+	Texts = {
+		{ Text = "fetching core...", Duration = 0.45 },
+		{ Text = "building interface...", Duration = 0.45 },
+	},
+	OnFinish = function()
+		build()
+	end,
+})
