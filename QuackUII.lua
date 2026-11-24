@@ -955,6 +955,16 @@ function Library:CreateWindow(opts)
 	end)
 
 	-- ── components ──────────────────────────────────────────
+	local function elemRow(par, ord, h)
+		local row = mk("Frame", {
+			Size = UDim2.new(1,0,0,h), BackgroundColor3 = Colors.Button,
+			BackgroundTransparency = 0.5, BorderSizePixel = 0,
+			LayoutOrder = ord or 0, Parent = par,
+		})
+		corner(row, 12)
+		gradStroke(row, Colors.AccentOff, Colors.Accent, 1, 0.62)
+		return row
+	end
 	local function section(par, title, ord)
 		local s = mk("Frame", {Size = UDim2.new(1,0,0,20), BackgroundTransparency = 1, BorderSizePixel = 0, LayoutOrder = ord or 0, Parent = par})
 		mk("TextLabel", {
@@ -966,30 +976,30 @@ function Library:CreateWindow(opts)
 
 	local function toggle(par, title, desc, def, ord, cb)
 		local hasDesc = desc and desc ~= ""
-		local rowH = hasDesc and 46 or 36
-		local row = mk("Frame", {Size = UDim2.new(1,0,0,rowH), BackgroundTransparency = 1, BorderSizePixel = 0, LayoutOrder = ord or 0, Parent = par})
+		local rowH = hasDesc and 54 or 44
+		local row = elemRow(par, ord, rowH)
 		mk("TextLabel", {
-			Position = hasDesc and UDim2.fromOffset(0, 3) or UDim2.fromOffset(0, 0),
-			Size = hasDesc and UDim2.new(1,-64,0,18) or UDim2.new(1,-64,1,0),
+			Position = hasDesc and UDim2.fromOffset(10, 4) or UDim2.fromOffset(10, 0),
+			Size = hasDesc and UDim2.new(1,-74,0,18) or UDim2.new(1,-74,1,0),
 			BackgroundTransparency = 1, BorderSizePixel = 0,
 			Text = title, FontFace = FingerPaint, TextSize = 15, TextColor3 = Colors.Text,
 			TextXAlignment = Enum.TextXAlignment.Left, Parent = row,
 		})
 		if hasDesc then
 			mk("TextLabel", {
-				Position = UDim2.fromOffset(0, 22), Size = UDim2.new(1,-64,0,16),
+				Position = UDim2.fromOffset(10, 23), Size = UDim2.new(1,-74,0,16),
 				BackgroundTransparency = 1, BorderSizePixel = 0,
 				Text = desc, FontFace = FingerPaint, TextSize = 12, TextColor3 = Colors.TextDim,
 				TextXAlignment = Enum.TextXAlignment.Left, Parent = row,
 			})
 		end
 		local track = mk("Frame", {
-			AnchorPoint = Vector2.new(1,0.5), Position = UDim2.new(1,0,0.5,0),
-			Size = UDim2.fromOffset(44,24), BackgroundColor3 = def and Colors.Accent or Colors.AccentOff,
+			AnchorPoint = Vector2.new(1,0.5), Position = UDim2.new(1,-10,0.5,0),
+			Size = UDim2.fromOffset(48,26), BackgroundColor3 = def and Colors.Accent or Colors.AccentOff,
 			BorderSizePixel = 0, Parent = row,
 		})
-		corner(track, 12)
-		local tStroke = stroke(track, LINE, 1.2, 1)
+		corner(track, 13)
+		local tStroke = stroke(track, Colors.TextHighlight, 1.2, 0.75)
 		local knob = mk("Frame", {
 			AnchorPoint = Vector2.new(0,0.5),
 			Position = def and UDim2.new(1,-21,0.5,0) or UDim2.new(0,3,0.5,0),
@@ -1037,14 +1047,14 @@ function Library:CreateWindow(opts)
 
 	local function slider(par, title, min, max, def, ord, cb)
 		local range = math.max(max - min, 1e-6)
-		local row = mk("Frame", {Size = UDim2.new(1,0,0,64), BackgroundTransparency = 1, BorderSizePixel = 0, LayoutOrder = ord or 0, Parent = par})
+		local row = elemRow(par, ord, 72)
 		mk("TextLabel", {
-			Position = UDim2.fromOffset(0,2), Size = UDim2.new(1,-64,0,18), BackgroundTransparency = 1, BorderSizePixel = 0,
+			Position = UDim2.fromOffset(10,4), Size = UDim2.new(1,-74,0,18), BackgroundTransparency = 1, BorderSizePixel = 0,
 			Text = title, FontFace = FingerPaint, TextSize = 15, TextColor3 = Colors.Text,
 			TextXAlignment = Enum.TextXAlignment.Left, Parent = row,
 		})
 		local vBadge = mk("Frame", {
-			AnchorPoint = Vector2.new(1,0), Position = UDim2.new(1,0,0,1), Size = UDim2.fromOffset(58,20),
+			AnchorPoint = Vector2.new(1,0), Position = UDim2.new(1,-10,0,3), Size = UDim2.fromOffset(58,20),
 			BackgroundColor3 = Colors.AccentOff, BackgroundTransparency = 0.25, BorderSizePixel = 0, Parent = row,
 		})
 		corner(vBadge, 10)
@@ -1054,7 +1064,7 @@ function Library:CreateWindow(opts)
 			Text = tostring(def), FontFace = FingerPaint, TextSize = 13, TextColor3 = Colors.Accent, Parent = vBadge,
 		})
 		local track = mk("Frame", {
-			Position = UDim2.new(0,0,0,36), Size = UDim2.new(1,0,0,16),
+			Position = UDim2.new(0,10,0,38), Size = UDim2.new(1,-20,0,16),
 			BackgroundColor3 = Colors.SliderTrack, BorderSizePixel = 0, Parent = row,
 		})
 		corner(track, 8)
@@ -1096,7 +1106,7 @@ function Library:CreateWindow(opts)
 		end
 		local dragging = false
 		local hit = mk("TextButton", {
-			Position = UDim2.new(0,0,0,30), Size = UDim2.new(1,0,0,28),
+			Position = UDim2.new(0,10,0,32), Size = UDim2.new(1,-20,0,28),
 			BackgroundTransparency = 1, BorderSizePixel = 0, Text = "", ZIndex = 4, Parent = row,
 		})
 		hit.MouseEnter:Connect(function()
@@ -1167,7 +1177,7 @@ function Library:CreateWindow(opts)
 			ClipsDescendants = true,
 			Parent = par,
 		})
-		corner(b, 9)
+		corner(b, 12)
 		local st = stroke(b, Colors.RowStroke, 1, 0.35)
 
 		local lbl = mk("TextLabel", {
@@ -1186,7 +1196,7 @@ function Library:CreateWindow(opts)
 			AnchorPoint = Vector2.new(0.5, 1),
 			Position = UDim2.new(0.5, 0, 1, 0),
 			Size = UDim2.new(0, 0, 0, 2),
-			BackgroundColor3 = LINE,
+			BackgroundColor3 = Colors.Accent,
 			BorderSizePixel = 0,
 			ZIndex = 3,
 			Parent = b,
@@ -1196,10 +1206,10 @@ function Library:CreateWindow(opts)
 		b.MouseEnter:Connect(function()
 			playHover()
 			TweenService:Create(b, Tw.soft, {
-				BackgroundColor3 = Color3.fromRGB(48, 48, 54),
+				BackgroundColor3 = Colors.AccentOff,
 				BackgroundTransparency = 0.04,
 			}):Play()
-			TweenService:Create(st, Tw.soft, { Transparency = 0.2, Color = LINE }):Play()
+			TweenService:Create(st, Tw.soft, { Transparency = 0.2, Color = Colors.Accent }):Play()
 			TweenService:Create(lbl, Tw.soft, { TextColor3 = Colors.TextHighlight }):Play()
 			TweenService:Create(line, Tw.spring, { Size = UDim2.new(0.5, 0, 0, 2) }):Play()
 		end)
@@ -1217,7 +1227,7 @@ function Library:CreateWindow(opts)
 		b.MouseButton1Down:Connect(function()
 			TweenService:Create(b, Tw.press, {
 				BackgroundTransparency = 0,
-				BackgroundColor3 = Color3.fromRGB(55, 55, 62),
+				BackgroundColor3 = Colors.ButtonStroke,
 			}):Play()
 			TweenService:Create(line, Tw.press, { Size = UDim2.new(0.65, 0, 0, 2) }):Play()
 		end)
@@ -1242,17 +1252,17 @@ function Library:CreateWindow(opts)
 	end
 
 	local function textbox(par, title, def, ord, cb)
-		local row = mk("Frame", {Size = UDim2.new(1,0,0,ROW_H), BackgroundTransparency = 1, BorderSizePixel = 0, LayoutOrder = ord or 0, Parent = par})
+		local row = elemRow(par, ord, ROW_H + 10)
 		mk("TextLabel", {
-			Position = UDim2.fromOffset(0,0), Size = UDim2.new(1,-8,0,16), BackgroundTransparency = 1, BorderSizePixel = 0,
+			Position = UDim2.fromOffset(10,2), Size = UDim2.new(1,-20,0,16), BackgroundTransparency = 1, BorderSizePixel = 0,
 			Text = title, FontFace = FingerPaint, TextSize = 15, TextColor3 = Colors.Text,
 			TextXAlignment = Enum.TextXAlignment.Left, Parent = row,
 		})
 		local field = mk("Frame", {
-			Position = UDim2.fromOffset(0,18), Size = UDim2.new(1,0,0,FIELD_H),
-			BackgroundColor3 = Colors.Button, BackgroundTransparency = 0.12, BorderSizePixel = 0, Parent = row,
+			Position = UDim2.fromOffset(10,20), Size = UDim2.new(1,-20,0,FIELD_H),
+			BackgroundColor3 = Colors.Background, BackgroundTransparency = 0.25, BorderSizePixel = 0, Parent = row,
 		})
-		corner(field, 8)
+		corner(field, 10)
 		local fst = stroke(field, Colors.RowStroke, 1, 0.4)
 		local box = mk("TextBox", {
 			Position = UDim2.fromOffset(12,0), Size = UDim2.new(1,-24,1,0),
@@ -1273,20 +1283,20 @@ function Library:CreateWindow(opts)
 	end
 
 	local function keybind(par, title, def, ord, cb)
-		local row = mk("Frame", {Size = UDim2.new(1,0,0,36), BackgroundTransparency = 1, BorderSizePixel = 0, LayoutOrder = ord or 0, Parent = par})
+		local row = elemRow(par, ord, 46)
 		mk("TextLabel", {
-			Position = UDim2.fromOffset(0,0), Size = UDim2.new(1,-90,1,0), BackgroundTransparency = 1, BorderSizePixel = 0,
+			Position = UDim2.fromOffset(10,0), Size = UDim2.new(1,-100,1,0), BackgroundTransparency = 1, BorderSizePixel = 0,
 			Text = title, FontFace = FingerPaint, TextSize = 15, TextColor3 = Colors.Text,
 			TextXAlignment = Enum.TextXAlignment.Left, Parent = row,
 		})
 		local kb = mk("TextButton", {
-			AnchorPoint = Vector2.new(1,0.5), Position = UDim2.new(1,0,0.5,0),
-			Size = UDim2.fromOffset(84,28), BackgroundColor3 = Colors.Button, BackgroundTransparency = 0.12,
+			AnchorPoint = Vector2.new(1,0.5), Position = UDim2.new(1,-10,0.5,0),
+			Size = UDim2.fromOffset(46,26), BackgroundColor3 = Colors.AccentOff, BackgroundTransparency = 0.35,
 			BorderSizePixel = 0, Text = def and def.Name or "None", FontFace = FingerPaint, TextSize = 13,
-			TextColor3 = Colors.Text, AutoButtonColor = false, Parent = row,
+			TextColor3 = Colors.Accent, AutoButtonColor = false, Parent = row,
 		})
-		corner(kb, 7)
-		local kst = stroke(kb, Colors.RowStroke, 1, 0.4)
+		corner(kb, 9)
+		local kst = stroke(kb, Colors.Accent, 1, 0.5)
 		local listen, cur = false, def
 		kb.MouseEnter:Connect(function()
 			playHover()
@@ -1321,21 +1331,18 @@ function Library:CreateWindow(opts)
 	local function dropdown(par, title, options, def, ord, cb)
 		options = options or {}
 		local selected = def or options[1] or ""
-		local row = mk("Frame", {
-			Size = UDim2.new(1,0,0,ROW_H), BackgroundTransparency = 1, BorderSizePixel = 0,
-			LayoutOrder = ord or 0, Parent = par,
-		})
+		local row = elemRow(par, ord, ROW_H + 10)
 		mk("TextLabel", {
-			Position = UDim2.fromOffset(0,0), Size = UDim2.new(1,-8,0,16), BackgroundTransparency = 1, BorderSizePixel = 0,
+			Position = UDim2.fromOffset(10,2), Size = UDim2.new(1,-20,0,16), BackgroundTransparency = 1, BorderSizePixel = 0,
 			Text = title, FontFace = FingerPaint, TextSize = 15, TextColor3 = Colors.Text,
 			TextXAlignment = Enum.TextXAlignment.Left, Parent = row,
 		})
 		local trigger = mk("TextButton", {
-			Position = UDim2.fromOffset(0,18), Size = UDim2.new(1,0,0,FIELD_H),
-			BackgroundColor3 = Colors.Button, BackgroundTransparency = 0.12,
+			Position = UDim2.fromOffset(10,20), Size = UDim2.new(1,-20,0,FIELD_H),
+			BackgroundColor3 = Colors.Background, BackgroundTransparency = 0.25,
 			BorderSizePixel = 0, Text = "", AutoButtonColor = false, Parent = row,
 		})
-		corner(trigger, 12)
+		corner(trigger, 10)
 		local trSt = stroke(trigger, Colors.RowStroke, 1, 0.4)
 		local triggerLbl = mk("TextLabel", {
 			Position = UDim2.fromOffset(12,0), Size = UDim2.new(1,-36,1,0),
@@ -1400,16 +1407,20 @@ function Library:CreateWindow(opts)
 			}):Play()
 		end
 
+		local itemBtns = {}
 		for i, opt in ipairs(options) do
 			local item = mk("TextButton", {
 				Size = UDim2.new(1,-8,0,28),
-				BackgroundTransparency = 1,
+				BackgroundColor3 = Colors.Button,
+				BackgroundTransparency = (selected == opt) and 0.12 or 0.45,
 				BorderSizePixel = 0,
 				Text = "",
 				AutoButtonColor = false,
 				LayoutOrder = i,
 				Parent = panel,
 			})
+			corner(item, 8)
+			itemBtns[opt] = item
 			local itemLbl = mk("TextLabel", {
 				Position = UDim2.fromOffset(12, 0),
 				Size = UDim2.new(1, -24, 1, 0),
@@ -1450,6 +1461,7 @@ function Library:CreateWindow(opts)
 			item.MouseButton1Click:Connect(function()
 				play("click")
 				selected = opt
+				for k, b in pairs(itemBtns) do b.BackgroundTransparency = (k == opt) and 0.12 or 0.45 end
 				triggerLbl.Text = tostring(opt)
 				closeOne(entry, false)
 				if cb then cb(opt) end
@@ -1486,22 +1498,19 @@ local function multiDropdown(par, title, options, defaults, ord, cb)
 		return picked[1] .. ", " .. picked[2] .. " +" .. (n - 2) .. " more"
 	end
 
-	local row = mk("Frame", {
-		Size = UDim2.new(1, 0, 0, ROW_H), BackgroundTransparency = 1, BorderSizePixel = 0,
-		LayoutOrder = ord or 0, Parent = par,
-	})
+	local row = elemRow(par, ord, ROW_H + 10)
 	mk("TextLabel", {
-		Position = UDim2.fromOffset(0, 0), Size = UDim2.new(1, -8, 0, 16),
+		Position = UDim2.fromOffset(10, 2), Size = UDim2.new(1, -20, 0, 16),
 		BackgroundTransparency = 1, BorderSizePixel = 0,
 		Text = title, FontFace = FingerPaint, TextSize = 15, TextColor3 = Colors.Text,
 		TextXAlignment = Enum.TextXAlignment.Left, Parent = row,
 	})
 	local trigger = mk("TextButton", {
-		Position = UDim2.fromOffset(0, 18), Size = UDim2.new(1, 0, 0, FIELD_H),
-		BackgroundColor3 = Colors.Button, BackgroundTransparency = 0.12,
+		Position = UDim2.fromOffset(10, 20), Size = UDim2.new(1, -20, 0, FIELD_H),
+		BackgroundColor3 = Colors.Background, BackgroundTransparency = 0.25,
 		BorderSizePixel = 0, Text = "", AutoButtonColor = false, Parent = row,
 	})
-	corner(trigger, 12)
+	corner(trigger, 10)
 	local trSt = stroke(trigger, Colors.RowStroke, 1, 0.4)
 	local triggerLbl = mk("TextLabel", {
 		Position = UDim2.fromOffset(12, 0), Size = UDim2.new(1, -36, 1, 0),
@@ -1633,6 +1642,9 @@ local function multiDropdown(par, title, options, defaults, ord, cb)
 		local r = itemRefs[opt]
 		if not r then return end
 		r.mark.Visible = selected[opt] == true
+		TweenService:Create(r.item, Tw.snap, {
+			BackgroundTransparency = selected[opt] and 0.12 or 0.45,
+		}):Play()
 		TweenService:Create(r.lbl, Tw.snap, {
 			TextColor3 = selected[opt] and Colors.Text or Colors.TextDim,
 		}):Play()
@@ -1641,10 +1653,13 @@ local function multiDropdown(par, title, options, defaults, ord, cb)
 	for i, opt in ipairs(options) do
 		local item = mk("TextButton", {
 			Size = UDim2.new(1, -8, 0, itemH),
-			BackgroundTransparency = 1, BorderSizePixel = 0,
+			BackgroundColor3 = Colors.Button,
+			BackgroundTransparency = selected[opt] and 0.12 or 0.45,
+			BorderSizePixel = 0,
 			Text = "", AutoButtonColor = false,
 			LayoutOrder = i, Parent = panel,
 		})
+		corner(item, 8)
 		local chk = mk("Frame", {
 			Position = UDim2.fromOffset(8, math.floor((itemH - 14) / 2)),
 			Size = UDim2.fromOffset(14, 14),
@@ -1740,17 +1755,14 @@ end
 
 	local function colorpicker(par, title, def, ord, cb)
 		def = def or Color3.fromRGB(160,160,170)
-		local row = mk("Frame", {
-			Size = UDim2.new(1,0,0,36), BackgroundTransparency = 1, BorderSizePixel = 0,
-			LayoutOrder = ord or 0, Parent = par,
-		})
+		local row = elemRow(par, ord, 46)
 		mk("TextLabel", {
-			Position = UDim2.fromOffset(0,0), Size = UDim2.new(1,-44,1,0), BackgroundTransparency = 1, BorderSizePixel = 0,
+			Position = UDim2.fromOffset(10,0), Size = UDim2.new(1,-54,1,0), BackgroundTransparency = 1, BorderSizePixel = 0,
 			Text = title, FontFace = FingerPaint, TextSize = 15, TextColor3 = Colors.Text,
 			TextXAlignment = Enum.TextXAlignment.Left, Parent = row,
 		})
 		local preview = mk("TextButton", {
-			AnchorPoint = Vector2.new(1,0.5), Position = UDim2.new(1,0,0.5,0),
+			AnchorPoint = Vector2.new(1,0.5), Position = UDim2.new(1,-10,0.5,0),
 			Size = UDim2.fromOffset(28,28), BackgroundColor3 = def, BorderSizePixel = 0,
 			Text = "", AutoButtonColor = false, Parent = row,
 		})
