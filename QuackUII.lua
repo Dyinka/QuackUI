@@ -135,16 +135,16 @@ local Themes = {
 		Text          = Color3.fromRGB(245, 228, 232),
 		TextDim       = Color3.fromRGB(150, 116, 124),
 		TextHighlight = Color3.fromRGB(255, 244, 246),
-		Accent        = Color3.fromRGB(235, 72, 94),
-		AccentOff     = Color3.fromRGB(58, 24, 32),
-		Knob          = Color3.fromRGB(245, 228, 232),
-		KnobOff       = Color3.fromRGB(130, 100, 108),
-		Button        = Color3.fromRGB(34, 22, 27),
-		ButtonStroke  = Color3.fromRGB(72, 40, 48),
-		RowStroke     = Color3.fromRGB(62, 36, 44),
-		SliderTrack   = Color3.fromRGB(30, 20, 24),
-		SliderFill    = Color3.fromRGB(235, 72, 94),
-		Close         = Color3.fromRGB(255, 92, 112),
+		Accent        = Color3.fromRGB(206, 108, 124),
+		AccentOff     = Color3.fromRGB(58, 30, 38),
+		Knob          = Color3.fromRGB(240, 226, 230),
+		KnobOff       = Color3.fromRGB(130, 110, 118),
+		Button        = Color3.fromRGB(34, 26, 30),
+		ButtonStroke  = Color3.fromRGB(70, 46, 55),
+		RowStroke     = Color3.fromRGB(60, 40, 48),
+		SliderTrack   = Color3.fromRGB(30, 23, 27),
+		SliderFill    = Color3.fromRGB(206, 108, 124),
+		Close         = Color3.fromRGB(224, 128, 140),
 	},
 	Royal = {
 		Background    = Color3.fromRGB(10, 13, 22),
@@ -183,22 +183,22 @@ local Themes = {
 		Close         = Color3.fromRGB(255, 100, 118),
 	},
 	Sakura = {
-		Background    = Color3.fromRGB(20, 14, 19),
-		TitleBar      = Color3.fromRGB(27, 18, 25),
-		Sidebar       = Color3.fromRGB(23, 16, 22),
-		Text          = Color3.fromRGB(248, 230, 240),
-		TextDim       = Color3.fromRGB(160, 126, 148),
-		TextHighlight = Color3.fromRGB(255, 242, 250),
-		Accent        = Color3.fromRGB(240, 130, 180),
-		AccentOff     = Color3.fromRGB(66, 34, 52),
-		Knob          = Color3.fromRGB(248, 230, 240),
-		KnobOff       = Color3.fromRGB(140, 110, 130),
-		Button        = Color3.fromRGB(36, 24, 33),
-		ButtonStroke  = Color3.fromRGB(76, 44, 64),
-		RowStroke     = Color3.fromRGB(66, 38, 56),
-		SliderTrack   = Color3.fromRGB(30, 20, 28),
-		SliderFill    = Color3.fromRGB(240, 130, 180),
-		Close         = Color3.fromRGB(255, 100, 130),
+		Background    = Color3.fromRGB(20, 17, 19),
+		TitleBar      = Color3.fromRGB(26, 22, 25),
+		Sidebar       = Color3.fromRGB(23, 20, 22),
+		Text          = Color3.fromRGB(236, 226, 231),
+		TextDim       = Color3.fromRGB(150, 138, 146),
+		TextHighlight = Color3.fromRGB(248, 242, 246),
+		Accent        = Color3.fromRGB(206, 146, 166),
+		AccentOff     = Color3.fromRGB(58, 42, 49),
+		Knob          = Color3.fromRGB(236, 226, 231),
+		KnobOff       = Color3.fromRGB(126, 114, 122),
+		Button        = Color3.fromRGB(34, 28, 32),
+		ButtonStroke  = Color3.fromRGB(70, 56, 63),
+		RowStroke     = Color3.fromRGB(60, 48, 55),
+		SliderTrack   = Color3.fromRGB(30, 25, 28),
+		SliderFill    = Color3.fromRGB(206, 146, 166),
+		Close         = Color3.fromRGB(224, 140, 150),
 	},
 	MD3 = {
 		Background    = Color3.fromRGB(18, 16, 22),
@@ -1059,13 +1059,14 @@ function Library:CreateWindow(opts)
 		grad(fill, Colors.AccentOff, Colors.SliderFill, 0)
 		local knob = mk("Frame", {
 			AnchorPoint = Vector2.new(0.5,0.5), Position = UDim2.fromScale(initRx,0.5),
-			Size = UDim2.fromOffset(14,28), BackgroundColor3 = Colors.Accent, BorderSizePixel = 0, Parent = track,
+			Size = UDim2.fromOffset(14,28), Rotation = 90, BackgroundColor3 = Colors.Accent,
+			BorderSizePixel = 0, Parent = track,
 		})
 		corner(knob, 7) stroke(knob, Colors.TextHighlight, 2, 0.25)
 		local bubble = mk("TextLabel", {
-			AnchorPoint = Vector2.new(0.5,1), Position = UDim2.new(0.5,0,0,-6), Size = UDim2.fromOffset(44,20),
+			AnchorPoint = Vector2.new(0.5,1), Position = UDim2.new(initRx,0,0,-20), Size = UDim2.fromOffset(44,20),
 			BackgroundTransparency = 1, BorderSizePixel = 0, Text = tostring(def), FontFace = FingerPaint,
-			TextSize = 12, TextColor3 = Colors.Accent, Visible = false, Parent = knob,
+			TextSize = 12, TextColor3 = Colors.Accent, Visible = false, ZIndex = 8, Parent = track,
 		})
 		local bubbleSc = mk("UIScale", {Scale = 0.7, Parent = bubble})
 		local function springHandle(pressed)
@@ -1094,6 +1095,7 @@ function Library:CreateWindow(opts)
 			local v = math.floor(min + (max - min) * rx + 0.5)
 			fill.Size = UDim2.fromScale(rx,1)
 			knob.Position = UDim2.fromScale(rx,0.5)
+			bubble.Position = UDim2.new(rx,0,0,-20)
 			vl.Text = tostring(v)
 			bubble.Text = tostring(v)
 			playSlider()
@@ -1125,6 +1127,7 @@ function Library:CreateWindow(opts)
 				local rx = math.clamp((v - min) / range, 0, 1)
 				fill.Size = UDim2.fromScale(rx,1)
 				TweenService:Create(knob, Tw.spring, {Position = UDim2.fromScale(rx,0.5)}):Play()
+				bubble.Position = UDim2.new(rx,0,0,-20)
 				vl.Text = tostring(v)
 				bubble.Text = tostring(v)
 				if cb then cb(v) end
@@ -1774,7 +1777,8 @@ end
 			corner(fill, 6)
 			local kn = mk("Frame", {
 				AnchorPoint = Vector2.new(0.5,0.5), Position = UDim2.fromScale(init,0.5),
-				Size = UDim2.fromOffset(10,20), BackgroundColor3 = Colors.Accent, BorderSizePixel = 0, Parent = track,
+				Size = UDim2.fromOffset(10,20), Rotation = 90, BackgroundColor3 = Colors.Accent,
+				BorderSizePixel = 0, Parent = track,
 			})
 			corner(kn, 5)
 			local function springKn(pressed)
