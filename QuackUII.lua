@@ -957,8 +957,8 @@ function Library:CreateWindow(opts)
 	-- ── components ──────────────────────────────────────────
 	local function elemRow(par, ord, h)
 		local row = mk("Frame", {
-			Size = UDim2.new(1,0,0,h), BackgroundColor3 = Colors.Button,
-			BackgroundTransparency = 0.5, BorderSizePixel = 0,
+			Size = UDim2.new(1,0,0,h), BackgroundColor3 = Colors.Button:Lerp(Colors.Text, 0.08),
+			BackgroundTransparency = 0.38, BorderSizePixel = 0,
 			LayoutOrder = ord or 0, Parent = par,
 		})
 		corner(row, 12)
@@ -1065,11 +1065,14 @@ function Library:CreateWindow(opts)
 		})
 		local track = mk("Frame", {
 			Position = UDim2.new(0,10,0,38), Size = UDim2.new(1,-20,0,16),
-			BackgroundColor3 = Colors.SliderTrack, BorderSizePixel = 0, Parent = row,
+			BackgroundColor3 = Colors.SliderTrack:Lerp(Colors.Text, 0.06), BorderSizePixel = 0, Parent = row,
 		})
 		corner(track, 8)
 		local tStroke = gradStroke(track, Colors.AccentOff, Colors.Accent, 1, 1)
 		local initRx = math.clamp((def - min) / range, 0, 1)
+		local function kx(rx)
+			return 0.03 + rx * 0.94
+		end
 		local halo = mk("Frame", {
 			Size = UDim2.fromScale(initRx,1), BackgroundColor3 = Colors.Accent,
 			BackgroundTransparency = 0.82, BorderSizePixel = 0, Parent = track,
@@ -1082,20 +1085,20 @@ function Library:CreateWindow(opts)
 		corner(fill, 8)
 		grad(fill, Colors.AccentOff, Colors.SliderFill, 0)
 		local knob = mk("Frame", {
-			AnchorPoint = Vector2.new(0.5,0.5), Position = UDim2.fromScale(initRx,0.5),
-			Size = UDim2.fromOffset(14,28), Rotation = 90, BackgroundColor3 = Colors.Accent,
+			AnchorPoint = Vector2.new(0.5,0.5), Position = UDim2.fromScale(kx(initRx),0.5),
+			Size = UDim2.fromOffset(26,16), BackgroundColor3 = Colors.Accent,
 			BorderSizePixel = 0, ZIndex = 3, Parent = track,
 		})
-		corner(knob, 7) stroke(knob, Colors.TextHighlight, 2, 0.25)
+		corner(knob, 6) stroke(knob, Colors.TextHighlight, 2, 0.25)
 		local bubble = mk("TextLabel", {
-			AnchorPoint = Vector2.new(0.5,1), Position = UDim2.new(initRx,0,0,-24), Size = UDim2.fromOffset(48,22),
+			AnchorPoint = Vector2.new(0.5,1), Position = UDim2.new(kx(initRx),0,0,-24), Size = UDim2.fromOffset(48,22),
 			BackgroundTransparency = 1, BorderSizePixel = 0, Text = tostring(def), FontFace = FingerPaint,
 			TextSize = 12, TextColor3 = Colors.Accent, Visible = false, ZIndex = 8, Parent = track,
 		})
 		local bubbleSc = mk("UIScale", {Scale = 0.7, Parent = bubble})
 		local function springHandle(pressed)
 			TweenService:Create(knob, Tw.spring, {
-				Size = pressed and UDim2.fromOffset(22,20) or UDim2.fromOffset(14,28)
+				Size = pressed and UDim2.fromOffset(32,14) or UDim2.fromOffset(26,16)
 			}):Play()
 			TweenService:Create(track, Tw.spring, {
 				Size = UDim2.new(1,0,0,pressed and 22 or 16)
@@ -1122,8 +1125,8 @@ function Library:CreateWindow(opts)
 			local v = math.floor(min + (max - min) * rx + 0.5)
 			fill.Size = UDim2.fromScale(rx,1)
 			halo.Size = UDim2.fromScale(rx,1)
-			knob.Position = UDim2.fromScale(rx,0.5)
-			bubble.Position = UDim2.new(rx,0,0,-24)
+			knob.Position = UDim2.fromScale(kx(rx),0.5)
+			bubble.Position = UDim2.new(kx(rx),0,0,-24)
 			vl.Text = tostring(v)
 			bubble.Text = tostring(v)
 			playSlider()
@@ -1935,8 +1938,8 @@ end
 		local open = o.Default == true
 
 		local card = mk("Frame", {
-			Size = UDim2.new(1,0,0,0), AutomaticSize = Enum.AutomaticSize.Y,
-			BackgroundColor3 = Colors.Button, BackgroundTransparency = 0.5,
+			Size = UDim2.new(1,0,0,headerH),
+			BackgroundColor3 = Colors.Button:Lerp(Colors.Text, 0.08), BackgroundTransparency = 0.38,
 			BorderSizePixel = 0, ClipsDescendants = true,
 			LayoutOrder = ord or 0, Parent = par,
 		})
@@ -1966,10 +1969,9 @@ end
 
 		local content = mk("Frame", {
 			Position = UDim2.new(0,0,0,headerH), Size = UDim2.new(1,0,0,0),
-			AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1,
-			BorderSizePixel = 0, Visible = open, Parent = card,
+			BackgroundTransparency = 1, BorderSizePixel = 0, Visible = open, Parent = card,
 		})
-		mk("UIListLayout", {SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0,6), Parent = content})
+		local listLayout = mk("UIListLayout", {SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0,6), Parent = content})
 		mk("UIPadding", {
 			PaddingLeft = UDim.new(0,10), PaddingRight = UDim.new(0,10),
 			PaddingBottom = UDim.new(0,10), Parent = content,
@@ -2021,11 +2023,28 @@ end
 			local el = colorpicker(content, v.Title or "Color", v.Default or Color3.fromRGB(160,160,170), nextO, v.Callback)
 			register(el, v.Flag) return guardEl(el)
 		end
+		local function setOpenHeight()
+			local h = listLayout.AbsoluteContentSize.Y
+			content.Size = UDim2.new(1,0,0,h)
+			card.Size = UDim2.new(1,0,0,headerH + h)
+		end
+		if open then task.defer(setOpenHeight) end
+
 		local function toggleOpen()
 			play("click")
 			open = not open
-			content.Visible = open
 			TweenService:Create(chev, Tw.spring, {Rotation = open and 180 or 0}):Play()
+			local h = math.max(listLayout.AbsoluteContentSize.Y, 0)
+			if open then
+				content.Visible = true
+				TweenService:Create(content, Tw.list, {Size = UDim2.new(1,0,0,h)}):Play()
+				TweenService:Create(card, Tw.list, {Size = UDim2.new(1,0,0,headerH + h)}):Play()
+			else
+				TweenService:Create(content, Tw.listIn, {Size = UDim2.new(1,0,0,0)}):Play()
+				local t = TweenService:Create(card, Tw.listIn, {Size = UDim2.new(1,0,0,headerH)})
+				t:Play()
+				t.Completed:Connect(function() if not open then content.Visible = false end end)
+			end
 		end
 		header.MouseButton1Click:Connect(toggleOpen)
 
