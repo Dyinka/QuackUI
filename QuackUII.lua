@@ -9,6 +9,40 @@ local LocalPlayer      = Players.LocalPlayer
 
 local Library = {}
 
+local alive = true
+local globalConns = {}
+
+local function guard(signal, fn)
+	local c = signal:Connect(function(...)
+		if not alive then return end
+		return fn(...)
+	end)
+	globalConns[#globalConns + 1] = c
+	return c
+end
+
+local function guardEl(el)
+	if type(el) ~= "table" then return el end
+	for k, v in pairs(el) do
+		if type(v) == "function" then
+			el[k] = function(...)
+				if not alive then return end
+				return v(...)
+			end
+		end
+	end
+	return el
+end
+
+local function dispose()
+	if not alive then return end
+	alive = false
+	for _, c in ipairs(globalConns) do
+		pcall(function() c:Disconnect() end)
+	end
+	table.clear(globalConns)
+end
+
 -- ═══════════════════════════════════════════════════════════
 -- STEALTH helpers — random names, high DisplayOrder
 -- ═══════════════════════════════════════════════════════════
@@ -179,6 +213,7 @@ local DefaultTw = {
 	listIn = TweenInfo.new(0.16, Enum.EasingStyle.Quad,  Enum.EasingDirection.In),
 	modal  = TweenInfo.new(0.32, Enum.EasingStyle.Back,  Enum.EasingDirection.Out),
 	notif  = TweenInfo.new(0.40, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
+	jelly  = TweenInfo.new(0.55, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
 }
 
 local function mk(c, p)
@@ -445,6 +480,15 @@ function Library:CreateWindow(opts)
 	ScreenGui:SetAttribute(OWN_ATTR, true)
 	Library._mark(ScreenGui)
 
+	local function shutdown()
+		dispose()
+		if ScreenGui and ScreenGui.Parent then ScreenGui:Destroy() end
+	end
+
+	ScreenGui.AncestryChanged:Connect(function(_, parent)
+		if not parent then dispose() end
+	end)
+
 
 	-- keep above game UI (some scripts lower foreign DisplayOrder)
 	task.spawn(function()
@@ -518,6 +562,7 @@ function Library:CreateWindow(opts)
 		TweenService:Create(nSc, Tw.bounce, {Scale = 1}):Play()
 		TweenService:Create(ns, Tw.notif, {Transparency = 0.5}):Play()
 		task.delay(dur, function()
+			if not alive then return end
 			local t1 = TweenService:Create(n, Tw.notif, {Position = UDim2.fromOffset(340,0), BackgroundTransparency = 1})
 			local t2 = TweenService:Create(nSc, Tw.soft, {Scale = 0.9})
 			local t3 = TweenService:Create(ns, Tw.notif, {Transparency = 1})
@@ -539,7 +584,7 @@ function Library:CreateWindow(opts)
 		})
 		task.spawn(function()
 			local fps, fr, el = 60, 0, 0
-			RunService.RenderStepped:Connect(function(dt)
+			guard(RunService.RenderStepped, function(dt)
 				fr += 1 el += dt
 				if el >= 1 then
 					fps = math.floor(fr/el) fr, el = 0, 0
@@ -714,14 +759,14 @@ function Library:CreateWindow(opts)
 		TextSize = 16, TextColor3 = Colors.Text, AutoButtonColor = false, ZIndex = 1007, Parent = Box,
 	})
 	corner(No, 9)
-	Yes.MouseButton1Click:Connect(function() play("close") ScreenGui:Destroy() end)
+	Yes.MouseButton1Click:Connect(function() play("close") shutdown() end)
 	No.MouseButton1Click:Connect(function()
 		play("click")
 		TweenService:Create(Overlay, Tw.snap, {BackgroundTransparency = 1}):Play()
 		TweenService:Create(bSc, Tw.soft, {Scale = 0.9}):Play()
 		TweenService:Create(Yes, Tw.snap, {BackgroundTransparency = 1, TextTransparency = 1}):Play()
 		TweenService:Create(No, Tw.snap, {BackgroundTransparency = 1, TextTransparency = 1}):Play()
-		task.delay(0.18, function() Overlay.Visible = false end)
+		task.delay(0.18, function() if alive and Overlay then Overlay.Visible = false end end)
 	end)
 
 	ctrlBtn("−", -50, Colors.TextDim, function()
@@ -760,6 +805,7 @@ function Library:CreateWindow(opts)
 		TweenService:Create(Overlay, Tw.snap, {BackgroundTransparency = 0.55}):Play()
 		TweenService:Create(bSc, Tw.modal, {Scale = 1}):Play()
 		task.delay(0.08, function()
+			if not alive then return end
 			TweenService:Create(Yes, Tw.snap, {BackgroundTransparency = 0, TextTransparency = 0}):Play()
 			TweenService:Create(No, Tw.snap, {BackgroundTransparency = 0, TextTransparency = 0}):Play()
 		end)
@@ -783,7 +829,7 @@ function Library:CreateWindow(opts)
 		for _, e in ipairs(copy) do closeOne(e, instant) end
 	end
 
-	UserInputService.InputBegan:Connect(function(inp)
+	guard(UserInputService.InputBegan, function(inp)
 		if inp.UserInputType ~= Enum.UserInputType.MouseButton1 and inp.UserInputType ~= Enum.UserInputType.Touch then return end
 		if #OpenPops == 0 then return end
 		local px, py = inp.Position.X, inp.Position.Y
@@ -849,7 +895,7 @@ function Library:CreateWindow(opts)
 			drag = true dStart = inp.Position sPos = Main.Position
 		end
 	end)
-	UserInputService.InputChanged:Connect(function(inp)
+	guard(UserInputService.InputChanged, function(inp)
 		if drag and (inp.UserInputType == Enum.UserInputType.MouseMovement or inp.UserInputType == Enum.UserInputType.Touch) then
 			local d = inp.Position - dStart
 			local vp = workspace.CurrentCamera.ViewportSize
@@ -859,12 +905,12 @@ function Library:CreateWindow(opts)
 			Main.Position = UDim2.fromOffset(tlX + sz.X/2, tlY + sz.Y/2)
 		end
 	end)
-	UserInputService.InputEnded:Connect(function(inp)
+	guard(UserInputService.InputEnded, function(inp)
 		if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then
 			drag = false lastPos = Main.Position
 		end
 	end)
-	UserInputService.InputBegan:Connect(function(inp, g)
+	guard(UserInputService.InputBegan, function(inp, g)
 		if g then return end
 		if inp.KeyCode == ToggleKey then Toggle() end
 	end)
@@ -912,6 +958,12 @@ function Library:CreateWindow(opts)
 			BorderSizePixel = 0, Parent = track,
 		})
 		corner(knob, 9)
+		local kSc = mk("UIScale", {Scale = 1, Parent = knob})
+		local function jumpJelly(target, col)
+			kSc.Scale = 0.72
+			TweenService:Create(kSc, Tw.jelly, {Scale = 1}):Play()
+			TweenService:Create(knob, Tw.jelly, {Position = target, BackgroundColor3 = col}):Play()
+		end
 		local state = def or false
 		local hit = mk("TextButton", {Size = UDim2.new(1,0,1,0), BackgroundTransparency = 1, BorderSizePixel = 0, Text = "", Parent = row})
 		hit.MouseEnter:Connect(function()
@@ -926,19 +978,18 @@ function Library:CreateWindow(opts)
 			state = not state
 			if state then
 				TweenService:Create(track, Tw.soft, {BackgroundColor3 = Colors.Accent}):Play()
-				TweenService:Create(knob, Tw.bounce, {Position = UDim2.new(1,-21,0.5,0), BackgroundColor3 = Colors.Knob}):Play()
+				jumpJelly(UDim2.new(1,-21,0.5,0), Colors.Knob)
 			else
 				TweenService:Create(track, Tw.soft, {BackgroundColor3 = Colors.AccentOff}):Play()
-				TweenService:Create(knob, Tw.bounce, {Position = UDim2.new(0,3,0.5,0), BackgroundColor3 = Colors.KnobOff}):Play()
+				jumpJelly(UDim2.new(0,3,0.5,0), Colors.KnobOff)
 			end
 			if cb then cb(state) end
 		end)
 		return {
 			Set = function(v)
 				state = v
-				track.BackgroundColor3 = state and Colors.Accent or Colors.AccentOff
-				knob.Position = state and UDim2.new(1,-21,0.5,0) or UDim2.new(0,3,0.5,0)
-				knob.BackgroundColor3 = state and Colors.Knob or Colors.KnobOff
+				TweenService:Create(track, Tw.soft, {BackgroundColor3 = state and Colors.Accent or Colors.AccentOff}):Play()
+				jumpJelly(state and UDim2.new(1,-21,0.5,0) or UDim2.new(0,3,0.5,0), state and Colors.Knob or Colors.KnobOff)
 				if cb then cb(state) end
 			end,
 			Get = function() return state end,
@@ -959,22 +1010,27 @@ function Library:CreateWindow(opts)
 			TextXAlignment = Enum.TextXAlignment.Right, Parent = row,
 		})
 		local track = mk("Frame", {
-			Position = UDim2.new(0,0,0,26), Size = UDim2.new(1,0,0,8),
+			Position = UDim2.new(0,0,0,24), Size = UDim2.new(1,0,0,12),
 			BackgroundColor3 = Colors.SliderTrack, BorderSizePixel = 0, Parent = row,
 		})
-		corner(track, 4)
+		corner(track, 6)
 		local tStroke = stroke(track, LINE, 1, 1)
 		local initRx = math.clamp((def - min) / range, 0, 1)
 		local fill = mk("Frame", {
 			Size = UDim2.fromScale(initRx,1), BackgroundColor3 = Colors.SliderFill,
 			BorderSizePixel = 0, Parent = track,
 		})
-		corner(fill, 4)
+		corner(fill, 6)
 		local knob = mk("Frame", {
 			AnchorPoint = Vector2.new(0.5,0.5), Position = UDim2.fromScale(initRx,0.5),
-			Size = UDim2.fromOffset(14,14), BackgroundColor3 = Colors.Text, BorderSizePixel = 0, Parent = track,
+			Size = UDim2.fromOffset(22,16), BackgroundColor3 = Colors.Text, BorderSizePixel = 0, Parent = track,
 		})
-		corner(knob, 7) stroke(knob, Colors.TitleBar, 1, 0.2)
+		corner(knob, 6) stroke(knob, Colors.TitleBar, 1, 0.2)
+		local knobSc = mk("UIScale", {Scale = 1, Parent = knob})
+		local function squish(pop)
+			knobSc.Scale = pop
+			TweenService:Create(knobSc, Tw.jelly, {Scale = 1}):Play()
+		end
 		local dragging = false
 		local hit = mk("TextButton", {
 			Position = UDim2.new(0,0,0,20), Size = UDim2.new(1,0,0,22),
@@ -1000,18 +1056,20 @@ function Library:CreateWindow(opts)
 		hit.InputBegan:Connect(function(inp)
 			if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then
 				dragging = true
+				squish(0.78)
 				upd(inp)
 			end
 		end)
-		UserInputService.InputChanged:Connect(function(inp)
+		guard(UserInputService.InputChanged, function(inp)
 			if dragging and (inp.UserInputType == Enum.UserInputType.MouseMovement or inp.UserInputType == Enum.UserInputType.Touch) then
 				upd(inp)
 			end
 		end)
-		UserInputService.InputEnded:Connect(function(inp)
+		guard(UserInputService.InputEnded, function(inp)
 			if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then
 				if dragging then
 					dragging = false
+					squish(0.86)
 					TweenService:Create(tStroke, Tw.snap, {Transparency = 1}):Play()
 				end
 			end
@@ -1020,8 +1078,9 @@ function Library:CreateWindow(opts)
 			Set = function(v)
 				local rx = math.clamp((v - min) / range, 0, 1)
 				fill.Size = UDim2.fromScale(rx,1)
-				knob.Position = UDim2.fromScale(rx,0.5)
+				TweenService:Create(knob, Tw.jelly, {Position = UDim2.fromScale(rx,0.5)}):Play()
 				vl.Text = tostring(v)
+				squish(0.78)
 				if cb then cb(v) end
 			end,
 			Get = function() return tonumber(vl.Text) end,
@@ -1107,6 +1166,7 @@ function Library:CreateWindow(opts)
 			play("click")
 			TweenService:Create(line, Tw.press, { BackgroundTransparency = 0.4 }):Play()
 			task.delay(0.1, function()
+				if not alive then return end
 				TweenService:Create(line, Tw.soft, { BackgroundTransparency = 0 }):Play()
 			end)
 			if cb then cb() end
@@ -1173,7 +1233,7 @@ function Library:CreateWindow(opts)
 			kb.Text = "..."
 			TweenService:Create(kst, Tw.snap, {Transparency = 0.1, Color = LINE}):Play()
 		end)
-		UserInputService.InputBegan:Connect(function(inp, g)
+		guard(UserInputService.InputBegan, function(inp, g)
 			if g or not listen then return end
 			if inp.UserInputType == Enum.UserInputType.Keyboard then
 				play("click")
@@ -1704,12 +1764,12 @@ end
 					dragging = true upd(inp)
 				end
 			end)
-			UserInputService.InputChanged:Connect(function(inp)
+			guard(UserInputService.InputChanged, function(inp)
 				if dragging and (inp.UserInputType == Enum.UserInputType.MouseMovement or inp.UserInputType == Enum.UserInputType.Touch) then
 					upd(inp)
 				end
 			end)
-			UserInputService.InputEnded:Connect(function(inp)
+			guard(UserInputService.InputEnded, function(inp)
 				if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then
 					dragging = false
 				end
@@ -1978,12 +2038,12 @@ end
 		function Tab:CreateToggle(o)
 			o = o or {} nextO += 1
 			local el = toggle(frame, o.Title or "Toggle", o.Description or "", o.Default or false, nextO, o.Callback)
-			register(el, o.Flag) return el
+			register(el, o.Flag) return guardEl(el)
 		end
 		function Tab:CreateSlider(o)
 			o = o or {} nextO += 1
 			local el = slider(frame, o.Title or "Slider", o.Min or 0, o.Max or 100, o.Default or 0, nextO, o.Callback)
-			register(el, o.Flag) return el
+			register(el, o.Flag) return guardEl(el)
 		end
 		function Tab:CreateButton(o)
 			o = o or {} nextO += 1
@@ -1992,27 +2052,27 @@ end
 		function Tab:CreateTextbox(o)
 			o = o or {} nextO += 1
 			local el = textbox(frame, o.Title or "Textbox", o.Default or "", nextO, o.Callback)
-			register(el, o.Flag) return el
+			register(el, o.Flag) return guardEl(el)
 		end
 		function Tab:CreateKeybind(o)
 			o = o or {} nextO += 1
 			local el = keybind(frame, o.Title or "Keybind", o.Default or Enum.KeyCode.P, nextO, o.Callback)
-			register(el, o.Flag) return el
+			register(el, o.Flag) return guardEl(el)
 		end
 		function Tab:CreateDropdown(o)
 			o = o or {} nextO += 1
 			local el = dropdown(frame, o.Title or "Dropdown", o.Options or {}, o.Default, nextO, o.Callback)
-			register(el, o.Flag) return el
+			register(el, o.Flag) return guardEl(el)
 		end
 		function Tab:CreateMultiDropdown(o)
 	o = o or {} nextO += 1
 	local el = multiDropdown(frame, o.Title or "Multi", o.Options or {}, o.Default, nextO, o.Callback)
-	register(el, o.Flag) return el
+	register(el, o.Flag) return guardEl(el)
 end
 		function Tab:CreateColorPicker(o)
 			o = o or {} nextO += 1
 			local el = colorpicker(frame, o.Title or "Color", o.Default or Color3.fromRGB(160,160,170), nextO, o.Callback)
-			register(el, o.Flag) return el
+			register(el, o.Flag) return guardEl(el)
 		end
 
 		function Tab:CreateConfigList(o)
@@ -2218,23 +2278,23 @@ end
 
 			refresh()
 
-			return {
+			return guardEl({
 				Refresh = refresh,
 				GetName = function() return box.Text end,
 				SetName = function(v) box.Text = tostring(v or "") filterText = box.Text refresh() end,
-			}
+			})
 		end
 
 		return Tab
 	end
 
-	function Window:Notify(t, txt, d) Notify(t, txt, d) end
-	function Window:SaveConfig(name) SaveCfg(name) end
-	function Window:LoadConfig(name) return LoadCfg(name) end
-	function Window:ListConfigs() return ListConfigs() end
-	function Window:DeleteConfig(name) return DeleteCfg(name) end
-	function Window:Toggle() Toggle() end
-	function Window:Destroy() ScreenGui:Destroy() end
+	function Window:Notify(t, txt, d) if not alive then return end Notify(t, txt, d) end
+	function Window:SaveConfig(name) if not alive then return end SaveCfg(name) end
+	function Window:LoadConfig(name) if not alive then return end return LoadCfg(name) end
+	function Window:ListConfigs() if not alive then return {} end return ListConfigs() end
+	function Window:DeleteConfig(name) if not alive then return end return DeleteCfg(name) end
+	function Window:Toggle() if not alive then return end Toggle() end
+	function Window:Destroy() if not alive then return end shutdown() end
 
 	return Window
 end
