@@ -1032,42 +1032,53 @@ function Library:CreateWindow(opts)
 
 	local function slider(par, title, min, max, def, ord, cb)
 		local range = math.max(max - min, 1e-6)
-		local row = mk("Frame", {Size = UDim2.new(1,0,0,42), BackgroundTransparency = 1, BorderSizePixel = 0, LayoutOrder = ord or 0, Parent = par})
+		local row = mk("Frame", {Size = UDim2.new(1,0,0,58), BackgroundTransparency = 1, BorderSizePixel = 0, LayoutOrder = ord or 0, Parent = par})
 		mk("TextLabel", {
-			Position = UDim2.fromOffset(0,2), Size = UDim2.new(1,-48,0,16), BackgroundTransparency = 1, BorderSizePixel = 0,
+			Position = UDim2.fromOffset(0,2), Size = UDim2.new(1,-52,0,18), BackgroundTransparency = 1, BorderSizePixel = 0,
 			Text = title, FontFace = FingerPaint, TextSize = 15, TextColor3 = Colors.Text,
 			TextXAlignment = Enum.TextXAlignment.Left, Parent = row,
 		})
 		local vl = mk("TextLabel", {
-			Position = UDim2.new(1,-48,0,2), Size = UDim2.fromOffset(48,16), BackgroundTransparency = 1, BorderSizePixel = 0,
-			Text = tostring(def), FontFace = FingerPaint, TextSize = 14, TextColor3 = Colors.Text,
+			AnchorPoint = Vector2.new(1,0), Position = UDim2.new(1,0,0,2), Size = UDim2.fromOffset(52,18),
+			BackgroundTransparency = 1, BorderSizePixel = 0,
+			Text = tostring(def), FontFace = FingerPaint, TextSize = 15, TextColor3 = Colors.Accent,
 			TextXAlignment = Enum.TextXAlignment.Right, Parent = row,
 		})
 		local track = mk("Frame", {
-			Position = UDim2.new(0,0,0,24), Size = UDim2.new(1,0,0,12),
+			Position = UDim2.new(0,0,0,30), Size = UDim2.new(1,0,0,14),
 			BackgroundColor3 = Colors.SliderTrack, BorderSizePixel = 0, Parent = row,
 		})
-		corner(track, 6)
+		corner(track, 7)
 		local tStroke = stroke(track, LINE, 1, 1)
 		local initRx = math.clamp((def - min) / range, 0, 1)
 		local fill = mk("Frame", {
 			Size = UDim2.fromScale(initRx,1), BackgroundColor3 = Colors.SliderFill,
 			BorderSizePixel = 0, Parent = track,
 		})
-		corner(fill, 6)
+		corner(fill, 7)
+		grad(fill, Colors.AccentOff, Colors.SliderFill, 0)
 		local knob = mk("Frame", {
 			AnchorPoint = Vector2.new(0.5,0.5), Position = UDim2.fromScale(initRx,0.5),
-			Size = UDim2.fromOffset(28,14), BackgroundColor3 = Colors.Accent, BorderSizePixel = 0, Parent = track,
+			Size = UDim2.fromOffset(14,28), BackgroundColor3 = Colors.Accent, BorderSizePixel = 0, Parent = track,
 		})
-		corner(knob, 6) stroke(knob, Colors.TextHighlight, 1, 0.35)
-		local knobSc = mk("UIScale", {Scale = 1, Parent = knob})
-		local function squish(pop)
-			knobSc.Scale = pop
-			TweenService:Create(knobSc, Tw.spring, {Scale = 1}):Play()
+		corner(knob, 7) stroke(knob, Colors.TextHighlight, 2, 0.25)
+		local bubble = mk("TextLabel", {
+			AnchorPoint = Vector2.new(0.5,1), Position = UDim2.new(0.5,0,0,-6), Size = UDim2.fromOffset(44,20),
+			BackgroundTransparency = 1, BorderSizePixel = 0, Text = tostring(def), FontFace = FingerPaint,
+			TextSize = 12, TextColor3 = Colors.Accent, Visible = false, Parent = knob,
+		})
+		local bubbleSc = mk("UIScale", {Scale = 0.7, Parent = bubble})
+		local function springHandle(pressed)
+			TweenService:Create(knob, Tw.spring, {
+				Size = pressed and UDim2.fromOffset(20,22) or UDim2.fromOffset(14,28)
+			}):Play()
+			bubble.Visible = pressed
+			bubbleSc.Scale = pressed and 0.7 or 1
+			TweenService:Create(bubbleSc, Tw.spring, {Scale = pressed and 1 or 0.7}):Play()
 		end
 		local dragging = false
 		local hit = mk("TextButton", {
-			Position = UDim2.new(0,0,0,20), Size = UDim2.new(1,0,0,22),
+			Position = UDim2.new(0,0,0,26), Size = UDim2.new(1,0,0,26),
 			BackgroundTransparency = 1, BorderSizePixel = 0, Text = "", Parent = row,
 		})
 		hit.MouseEnter:Connect(function()
@@ -1084,13 +1095,14 @@ function Library:CreateWindow(opts)
 			fill.Size = UDim2.fromScale(rx,1)
 			knob.Position = UDim2.fromScale(rx,0.5)
 			vl.Text = tostring(v)
+			bubble.Text = tostring(v)
 			playSlider()
 			if cb then cb(v) end
 		end
 		hit.InputBegan:Connect(function(inp)
 			if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then
 				dragging = true
-				squish(0.78)
+				springHandle(true)
 				upd(inp)
 			end
 		end)
@@ -1103,7 +1115,7 @@ function Library:CreateWindow(opts)
 			if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then
 				if dragging then
 					dragging = false
-					squish(0.86)
+					springHandle(false)
 					TweenService:Create(tStroke, Tw.snap, {Transparency = 1}):Play()
 				end
 			end
@@ -1114,7 +1126,7 @@ function Library:CreateWindow(opts)
 				fill.Size = UDim2.fromScale(rx,1)
 				TweenService:Create(knob, Tw.spring, {Position = UDim2.fromScale(rx,0.5)}):Play()
 				vl.Text = tostring(v)
-				squish(0.78)
+				bubble.Text = tostring(v)
 				if cb then cb(v) end
 			end,
 			Get = function() return tonumber(vl.Text) end,
@@ -1751,20 +1763,25 @@ end
 				TextSize = 12, TextColor3 = Colors.TextDim, Parent = panel,
 			})
 			local track = mk("Frame", {
-				Position = UDim2.fromOffset(30, y+3), Size = UDim2.fromOffset(140, 10),
+				Position = UDim2.fromOffset(30, y+2), Size = UDim2.fromOffset(140, 12),
 				BackgroundColor3 = Colors.SliderTrack, BorderSizePixel = 0, Parent = panel,
 			})
-			corner(track, 5)
+			corner(track, 6)
 			local fill = mk("Frame", {
 				Size = UDim2.fromScale(init,1), BackgroundColor3 = Colors.SliderFill,
 				BorderSizePixel = 0, Parent = track,
 			})
-			corner(fill, 5)
+			corner(fill, 6)
 			local kn = mk("Frame", {
 				AnchorPoint = Vector2.new(0.5,0.5), Position = UDim2.fromScale(init,0.5),
-				Size = UDim2.fromOffset(18,12), BackgroundColor3 = Colors.Accent, BorderSizePixel = 0, Parent = track,
+				Size = UDim2.fromOffset(10,20), BackgroundColor3 = Colors.Accent, BorderSizePixel = 0, Parent = track,
 			})
-			corner(kn, 6)
+			corner(kn, 5)
+			local function springKn(pressed)
+				TweenService:Create(kn, Tw.spring, {
+					Size = pressed and UDim2.fromOffset(14,16) or UDim2.fromOffset(10,20)
+				}):Play()
+			end
 			local valLbl = mk("TextLabel", {
 				Position = UDim2.fromOffset(178, y), Size = UDim2.fromOffset(32, 16),
 				BackgroundTransparency = 1, BorderSizePixel = 0,
@@ -1786,7 +1803,9 @@ end
 			end
 			hit.InputBegan:Connect(function(inp)
 				if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then
-					dragging = true upd(inp)
+					dragging = true
+					springKn(true)
+					upd(inp)
 				end
 			end)
 			guard(UserInputService.InputChanged, function(inp)
@@ -1796,7 +1815,10 @@ end
 			end)
 			guard(UserInputService.InputEnded, function(inp)
 				if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then
-					dragging = false
+					if dragging then
+						dragging = false
+						springKn(false)
+					end
 				end
 			end)
 			return function(rx)
