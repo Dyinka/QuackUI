@@ -283,6 +283,11 @@ local function stroke(p, col, th, tr)
 		Parent = p,
 	})
 end
+local function gradStroke(p, c1, c2, th, tr)
+	local s = stroke(p, c1 or LINE, th or 1, tr or 0.35)
+	grad(s, c1 or LINE, c2 or c1 or LINE, 0)
+	return s
+end
 local function safeName(name)
 	name = tostring(name or "default"):gsub("[^%w%-%_]", "_")
 	if name == "" then name = "default" end
@@ -569,7 +574,7 @@ function Library:CreateWindow(opts)
 			BorderSizePixel = 0, LayoutOrder = nOrder, Parent = NotifBox,
 		})
 		corner(n, 10)
-		local ns = stroke(n, LINE, 1.2, 1)
+		local ns = gradStroke(n, Colors.AccentOff, Colors.Accent, 1.2, 1)
 		local nSc = mk("UIScale", {Scale = 0.88, Parent = n})
 		mk("UIPadding", {
 			PaddingTop = UDim.new(0,10), PaddingBottom = UDim.new(0,10),
@@ -578,7 +583,7 @@ function Library:CreateWindow(opts)
 		mk("ImageLabel", {
 			Position = UDim2.fromOffset(0,2), Size = UDim2.fromOffset(20,20),
 			BackgroundTransparency = 1, BorderSizePixel = 0, Image = "rbxassetid://10709775704",
-			ImageColor3 = LINE, Parent = n,
+			ImageColor3 = Colors.Accent, Parent = n,
 		})
 		mk("TextLabel", {
 			Position = UDim2.fromOffset(28,0), Size = UDim2.new(1,-28,0,18),
@@ -611,7 +616,7 @@ function Library:CreateWindow(opts)
 			Size = UDim2.fromOffset(170,26), BackgroundColor3 = Colors.TitleBar,
 			BackgroundTransparency = 0.4, BorderSizePixel = 0, ZIndex = 1000, Parent = ScreenGui,
 		})
-		corner(WM, 8) stroke(WM, LINE, 1, 0.5)
+		corner(WM, 12) gradStroke(WM, Colors.AccentOff, Colors.Accent, 1.2, 0.45)
 		local WMLabel = mk("TextLabel", {
 			Size = UDim2.fromScale(1,1), BackgroundTransparency = 1, BorderSizePixel = 0,
 			Text = WMText.." | FPS: 60", FontFace = FingerPaint, TextSize = 13, TextColor3 = Colors.Text, Parent = WM,
@@ -689,7 +694,7 @@ function Library:CreateWindow(opts)
 		BorderSizePixel = 0, ClipsDescendants = true, GroupTransparency = 0,
 		Visible = false, Parent = ScreenGui,
 	})
-	corner(Main, CornerR) stroke(Main, LINE, 1.2, 0.65)
+	corner(Main, CornerR) gradStroke(Main, Colors.AccentOff, Colors.Accent, 1.4, 0.55)
 
 	local TitleBar = mk("Frame", {
 		Name = "TitleBar", Size = UDim2.new(1,0,0,TITLE_H),
@@ -722,7 +727,7 @@ function Library:CreateWindow(opts)
 		local t = 0
 		while ag.Parent do
 			t += task.wait()
-			ag.Offset = Vector2.new(((t * 0.35) % 2) - 1, 0)
+			ag.Offset = Vector2.new(math.sin(t * 0.6), 0)
 		end
 	end)
 
@@ -1032,46 +1037,58 @@ function Library:CreateWindow(opts)
 
 	local function slider(par, title, min, max, def, ord, cb)
 		local range = math.max(max - min, 1e-6)
-		local row = mk("Frame", {Size = UDim2.new(1,0,0,58), BackgroundTransparency = 1, BorderSizePixel = 0, LayoutOrder = ord or 0, Parent = par})
+		local row = mk("Frame", {Size = UDim2.new(1,0,0,64), BackgroundTransparency = 1, BorderSizePixel = 0, LayoutOrder = ord or 0, Parent = par})
 		mk("TextLabel", {
-			Position = UDim2.fromOffset(0,2), Size = UDim2.new(1,-52,0,18), BackgroundTransparency = 1, BorderSizePixel = 0,
+			Position = UDim2.fromOffset(0,2), Size = UDim2.new(1,-64,0,18), BackgroundTransparency = 1, BorderSizePixel = 0,
 			Text = title, FontFace = FingerPaint, TextSize = 15, TextColor3 = Colors.Text,
 			TextXAlignment = Enum.TextXAlignment.Left, Parent = row,
 		})
+		local vBadge = mk("Frame", {
+			AnchorPoint = Vector2.new(1,0), Position = UDim2.new(1,0,0,1), Size = UDim2.fromOffset(58,20),
+			BackgroundColor3 = Colors.AccentOff, BackgroundTransparency = 0.25, BorderSizePixel = 0, Parent = row,
+		})
+		corner(vBadge, 10)
+		gradStroke(vBadge, Colors.AccentOff, Colors.Accent, 1, 0.4)
 		local vl = mk("TextLabel", {
-			AnchorPoint = Vector2.new(1,0), Position = UDim2.new(1,0,0,2), Size = UDim2.fromOffset(52,18),
-			BackgroundTransparency = 1, BorderSizePixel = 0,
-			Text = tostring(def), FontFace = FingerPaint, TextSize = 15, TextColor3 = Colors.Accent,
-			TextXAlignment = Enum.TextXAlignment.Right, Parent = row,
+			Size = UDim2.fromScale(1,1), BackgroundTransparency = 1, BorderSizePixel = 0,
+			Text = tostring(def), FontFace = FingerPaint, TextSize = 13, TextColor3 = Colors.Accent, Parent = vBadge,
 		})
 		local track = mk("Frame", {
-			Position = UDim2.new(0,0,0,30), Size = UDim2.new(1,0,0,14),
+			Position = UDim2.new(0,0,0,36), Size = UDim2.new(1,0,0,16),
 			BackgroundColor3 = Colors.SliderTrack, BorderSizePixel = 0, Parent = row,
 		})
-		corner(track, 7)
-		local tStroke = stroke(track, LINE, 1, 1)
+		corner(track, 8)
+		local tStroke = gradStroke(track, Colors.AccentOff, Colors.Accent, 1, 1)
 		local initRx = math.clamp((def - min) / range, 0, 1)
+		local halo = mk("Frame", {
+			Size = UDim2.fromScale(initRx,1), BackgroundColor3 = Colors.Accent,
+			BackgroundTransparency = 0.82, BorderSizePixel = 0, Parent = track,
+		})
+		corner(halo, 8)
 		local fill = mk("Frame", {
 			Size = UDim2.fromScale(initRx,1), BackgroundColor3 = Colors.SliderFill,
-			BorderSizePixel = 0, Parent = track,
+			BorderSizePixel = 0, ZIndex = 2, Parent = track,
 		})
-		corner(fill, 7)
+		corner(fill, 8)
 		grad(fill, Colors.AccentOff, Colors.SliderFill, 0)
 		local knob = mk("Frame", {
 			AnchorPoint = Vector2.new(0.5,0.5), Position = UDim2.fromScale(initRx,0.5),
 			Size = UDim2.fromOffset(14,28), Rotation = 90, BackgroundColor3 = Colors.Accent,
-			BorderSizePixel = 0, Parent = track,
+			BorderSizePixel = 0, ZIndex = 3, Parent = track,
 		})
 		corner(knob, 7) stroke(knob, Colors.TextHighlight, 2, 0.25)
 		local bubble = mk("TextLabel", {
-			AnchorPoint = Vector2.new(0.5,1), Position = UDim2.new(initRx,0,0,-20), Size = UDim2.fromOffset(44,20),
+			AnchorPoint = Vector2.new(0.5,1), Position = UDim2.new(initRx,0,0,-24), Size = UDim2.fromOffset(48,22),
 			BackgroundTransparency = 1, BorderSizePixel = 0, Text = tostring(def), FontFace = FingerPaint,
 			TextSize = 12, TextColor3 = Colors.Accent, Visible = false, ZIndex = 8, Parent = track,
 		})
 		local bubbleSc = mk("UIScale", {Scale = 0.7, Parent = bubble})
 		local function springHandle(pressed)
 			TweenService:Create(knob, Tw.spring, {
-				Size = pressed and UDim2.fromOffset(20,22) or UDim2.fromOffset(14,28)
+				Size = pressed and UDim2.fromOffset(22,20) or UDim2.fromOffset(14,28)
+			}):Play()
+			TweenService:Create(track, Tw.spring, {
+				Size = UDim2.new(1,0,0,pressed and 22 or 16)
 			}):Play()
 			bubble.Visible = pressed
 			bubbleSc.Scale = pressed and 0.7 or 1
@@ -1079,8 +1096,8 @@ function Library:CreateWindow(opts)
 		end
 		local dragging = false
 		local hit = mk("TextButton", {
-			Position = UDim2.new(0,0,0,26), Size = UDim2.new(1,0,0,26),
-			BackgroundTransparency = 1, BorderSizePixel = 0, Text = "", Parent = row,
+			Position = UDim2.new(0,0,0,30), Size = UDim2.new(1,0,0,28),
+			BackgroundTransparency = 1, BorderSizePixel = 0, Text = "", ZIndex = 4, Parent = row,
 		})
 		hit.MouseEnter:Connect(function()
 			playHover()
@@ -1094,8 +1111,9 @@ function Library:CreateWindow(opts)
 			local rx = math.clamp((inp.Position.X - track.AbsolutePosition.X) / math.max(track.AbsoluteSize.X,1), 0, 1)
 			local v = math.floor(min + (max - min) * rx + 0.5)
 			fill.Size = UDim2.fromScale(rx,1)
+			halo.Size = UDim2.fromScale(rx,1)
 			knob.Position = UDim2.fromScale(rx,0.5)
-			bubble.Position = UDim2.new(rx,0,0,-20)
+			bubble.Position = UDim2.new(rx,0,0,-24)
 			vl.Text = tostring(v)
 			bubble.Text = tostring(v)
 			playSlider()
@@ -1126,8 +1144,9 @@ function Library:CreateWindow(opts)
 			Set = function(v)
 				local rx = math.clamp((v - min) / range, 0, 1)
 				fill.Size = UDim2.fromScale(rx,1)
+				halo.Size = UDim2.fromScale(rx,1)
 				TweenService:Create(knob, Tw.spring, {Position = UDim2.fromScale(rx,0.5)}):Play()
-				bubble.Position = UDim2.new(rx,0,0,-20)
+				bubble.Position = UDim2.new(rx,0,0,-24)
 				vl.Text = tostring(v)
 				bubble.Text = tostring(v)
 				if cb then cb(v) end
