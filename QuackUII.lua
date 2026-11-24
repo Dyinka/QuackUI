@@ -200,6 +200,24 @@ local Themes = {
 		SliderFill    = Color3.fromRGB(240, 130, 180),
 		Close         = Color3.fromRGB(255, 100, 130),
 	},
+	MD3 = {
+		Background    = Color3.fromRGB(18, 16, 22),
+		TitleBar      = Color3.fromRGB(25, 22, 30),
+		Sidebar       = Color3.fromRGB(21, 19, 26),
+		Text          = Color3.fromRGB(230, 224, 233),
+		TextDim       = Color3.fromRGB(158, 150, 166),
+		TextHighlight = Color3.fromRGB(246, 241, 249),
+		Accent        = Color3.fromRGB(208, 188, 255),
+		AccentOff     = Color3.fromRGB(48, 40, 62),
+		Knob          = Color3.fromRGB(246, 241, 249),
+		KnobOff       = Color3.fromRGB(130, 122, 140),
+		Button        = Color3.fromRGB(32, 29, 38),
+		ButtonStroke  = Color3.fromRGB(60, 55, 68),
+		RowStroke     = Color3.fromRGB(52, 48, 60),
+		SliderTrack   = Color3.fromRGB(30, 27, 35),
+		SliderFill    = Color3.fromRGB(208, 188, 255),
+		Close         = Color3.fromRGB(242, 184, 193),
+	},
 }
 
 local DefaultTw = {
@@ -213,7 +231,8 @@ local DefaultTw = {
 	listIn = TweenInfo.new(0.16, Enum.EasingStyle.Quad,  Enum.EasingDirection.In),
 	modal  = TweenInfo.new(0.32, Enum.EasingStyle.Back,  Enum.EasingDirection.Out),
 	notif  = TweenInfo.new(0.40, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
-	jelly  = TweenInfo.new(0.55, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
+	spring = TweenInfo.new(0.38, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+	springSoft = TweenInfo.new(0.44, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
 }
 
 local function mk(c, p)
@@ -238,6 +257,21 @@ local function grad(p, c1, c2, rot)
 end
 local function corner(p, r)
 	return mk("UICorner", {CornerRadius = UDim.new(0, r or 10), Parent = p})
+end
+local function chevron(p, col)
+	local c = mk("Frame", {
+		AnchorPoint = Vector2.new(1,0.5), Position = UDim2.new(1,-10,0.5,0),
+		Size = UDim2.fromOffset(14,14), BackgroundTransparency = 1, BorderSizePixel = 0, Parent = p,
+	})
+	for _, a in ipairs({{0.36,45},{0.64,-45}}) do
+		local arm = mk("Frame", {
+			AnchorPoint = Vector2.new(0.5,0.5), Position = UDim2.fromScale(a[1],0.42),
+			Size = UDim2.fromOffset(2,7), BackgroundColor3 = col or LINE,
+			BorderSizePixel = 0, Rotation = a[2], Parent = c,
+		})
+		corner(arm, 1)
+	end
+	return c
 end
 local function stroke(p, col, th, tr)
 	return mk("UIStroke", {
@@ -316,7 +350,7 @@ function Library:CreateLoader(opts)
 		BackgroundColor3 = Colors.Background, BackgroundTransparency = 0.2,
 		BorderSizePixel = 0, ZIndex = 2, Parent = gui,
 	})
-	corner(card, 14) stroke(card, Colors.ButtonStroke, 1.2, 0.4)
+	corner(card, 20) stroke(card, Colors.ButtonStroke, 1.2, 0.4)
 	local cardSc = mk("UIScale", {Scale = 0.94, Parent = card})
 
 	mk("TextLabel", {
@@ -407,7 +441,7 @@ function Library:CreateWindow(opts)
 	local MainTrans     = opts.MainTransparency or 0.22
 	local TitleTrans    = 0.08
 	local SidebarTrans  = opts.SidebarTransparency or 0.28
-	local CornerR       = opts.CornerRadius or 14
+	local CornerR       = opts.CornerRadius or 20
 	local SoundEnabled  = opts.SoundEnabled ~= false
 	-- Stealth = random names + top DisplayOrder only (mascot/UI stay)
 	local StealthMode   = opts.Stealth ~= false  -- default ON
@@ -959,10 +993,10 @@ function Library:CreateWindow(opts)
 		})
 		corner(knob, 9)
 		local kSc = mk("UIScale", {Scale = 1, Parent = knob})
-		local function jumpJelly(target, col)
+		local function jumpSpring(target, col)
 			kSc.Scale = 0.72
-			TweenService:Create(kSc, Tw.jelly, {Scale = 1}):Play()
-			TweenService:Create(knob, Tw.jelly, {Position = target, BackgroundColor3 = col}):Play()
+			TweenService:Create(kSc, Tw.spring, {Scale = 1}):Play()
+			TweenService:Create(knob, Tw.spring, {Position = target, BackgroundColor3 = col}):Play()
 		end
 		local state = def or false
 		local hit = mk("TextButton", {Size = UDim2.new(1,0,1,0), BackgroundTransparency = 1, BorderSizePixel = 0, Text = "", Parent = row})
@@ -977,11 +1011,11 @@ function Library:CreateWindow(opts)
 			play("click")
 			state = not state
 			if state then
-				TweenService:Create(track, Tw.soft, {BackgroundColor3 = Colors.Accent}):Play()
-				jumpJelly(UDim2.new(1,-21,0.5,0), Colors.Knob)
+				TweenService:Create(track, Tw.springSoft, {BackgroundColor3 = Colors.Accent}):Play()
+				jumpSpring(UDim2.new(1,-21,0.5,0), Colors.Knob)
 			else
-				TweenService:Create(track, Tw.soft, {BackgroundColor3 = Colors.AccentOff}):Play()
-				jumpJelly(UDim2.new(0,3,0.5,0), Colors.KnobOff)
+				TweenService:Create(track, Tw.springSoft, {BackgroundColor3 = Colors.AccentOff}):Play()
+				jumpSpring(UDim2.new(0,3,0.5,0), Colors.KnobOff)
 			end
 			if cb then cb(state) end
 		end)
@@ -989,7 +1023,7 @@ function Library:CreateWindow(opts)
 			Set = function(v)
 				state = v
 				TweenService:Create(track, Tw.soft, {BackgroundColor3 = state and Colors.Accent or Colors.AccentOff}):Play()
-				jumpJelly(state and UDim2.new(1,-21,0.5,0) or UDim2.new(0,3,0.5,0), state and Colors.Knob or Colors.KnobOff)
+				jumpSpring(state and UDim2.new(1,-21,0.5,0) or UDim2.new(0,3,0.5,0), state and Colors.Knob or Colors.KnobOff)
 				if cb then cb(state) end
 			end,
 			Get = function() return state end,
@@ -1023,13 +1057,13 @@ function Library:CreateWindow(opts)
 		corner(fill, 6)
 		local knob = mk("Frame", {
 			AnchorPoint = Vector2.new(0.5,0.5), Position = UDim2.fromScale(initRx,0.5),
-			Size = UDim2.fromOffset(22,16), BackgroundColor3 = Colors.Text, BorderSizePixel = 0, Parent = track,
+			Size = UDim2.fromOffset(28,14), BackgroundColor3 = Colors.Accent, BorderSizePixel = 0, Parent = track,
 		})
-		corner(knob, 6) stroke(knob, Colors.TitleBar, 1, 0.2)
+		corner(knob, 6) stroke(knob, Colors.TextHighlight, 1, 0.35)
 		local knobSc = mk("UIScale", {Scale = 1, Parent = knob})
 		local function squish(pop)
 			knobSc.Scale = pop
-			TweenService:Create(knobSc, Tw.jelly, {Scale = 1}):Play()
+			TweenService:Create(knobSc, Tw.spring, {Scale = 1}):Play()
 		end
 		local dragging = false
 		local hit = mk("TextButton", {
@@ -1078,7 +1112,7 @@ function Library:CreateWindow(opts)
 			Set = function(v)
 				local rx = math.clamp((v - min) / range, 0, 1)
 				fill.Size = UDim2.fromScale(rx,1)
-				TweenService:Create(knob, Tw.jelly, {Position = UDim2.fromScale(rx,0.5)}):Play()
+				TweenService:Create(knob, Tw.spring, {Position = UDim2.fromScale(rx,0.5)}):Play()
 				vl.Text = tostring(v)
 				squish(0.78)
 				if cb then cb(v) end
@@ -1133,7 +1167,7 @@ function Library:CreateWindow(opts)
 			}):Play()
 			TweenService:Create(st, Tw.soft, { Transparency = 0.2, Color = LINE }):Play()
 			TweenService:Create(lbl, Tw.soft, { TextColor3 = Colors.TextHighlight }):Play()
-			TweenService:Create(line, Tw.soft, { Size = UDim2.new(0.5, 0, 0, 2) }):Play()
+			TweenService:Create(line, Tw.spring, { Size = UDim2.new(0.5, 0, 0, 2) }):Play()
 		end)
 
 		b.MouseLeave:Connect(function()
@@ -1159,7 +1193,7 @@ function Library:CreateWindow(opts)
 				BackgroundTransparency = 0.04,
 				BackgroundColor3 = Color3.fromRGB(48, 48, 54),
 			}):Play()
-			TweenService:Create(line, Tw.soft, { Size = UDim2.new(0.5, 0, 0, 2) }):Play()
+			TweenService:Create(line, Tw.spring, { Size = UDim2.new(0.5, 0, 0, 2) }):Play()
 		end)
 
 		b.MouseButton1Click:Connect(function()
@@ -1267,18 +1301,14 @@ function Library:CreateWindow(opts)
 			BackgroundColor3 = Colors.Button, BackgroundTransparency = 0.12,
 			BorderSizePixel = 0, Text = "", AutoButtonColor = false, Parent = row,
 		})
-		corner(trigger, 8)
+		corner(trigger, 12)
 		local trSt = stroke(trigger, Colors.RowStroke, 1, 0.4)
 		local triggerLbl = mk("TextLabel", {
 			Position = UDim2.fromOffset(12,0), Size = UDim2.new(1,-36,1,0),
 			BackgroundTransparency = 1, BorderSizePixel = 0, Text = tostring(selected), FontFace = FingerPaint,
 			TextSize = 14, TextColor3 = Colors.Text, TextXAlignment = Enum.TextXAlignment.Left, Parent = trigger,
 		})
-		local chev = mk("TextLabel", {
-			AnchorPoint = Vector2.new(1,0.5), Position = UDim2.new(1,-10,0.5,0),
-			Size = UDim2.fromOffset(16,16), BackgroundTransparency = 1, BorderSizePixel = 0, Text = "▾",
-			FontFace = FingerPaint, TextSize = 12, TextColor3 = Colors.TextDim, Parent = trigger,
-		})
+		local chev = chevron(trigger, Colors.TextDim)
 
 		local panelH = math.min(#options * 30 + 8, 170)
 		local panel = mk("ScrollingFrame", {
@@ -1297,7 +1327,7 @@ function Library:CreateWindow(opts)
 		local entry = { panel = panel, isOpen = false, closing = false, width = 0, triggers = {trigger} }
 
 		entry.closeFn = function(instant)
-			TweenService:Create(chev, Tw.soft, {Rotation = 0}):Play()
+			TweenService:Create(chev, Tw.spring, {Rotation = 0}):Play()
 			TweenService:Create(trSt, Tw.soft, {Transparency = 0.4, Color = Colors.RowStroke}):Play()
 			if instant then
 				panel.Visible = false
@@ -1329,7 +1359,7 @@ function Library:CreateWindow(opts)
 			panel.BackgroundTransparency = 1
 			entry.isOpen = true entry.closing = false
 			table.insert(OpenPops, entry)
-			TweenService:Create(chev, Tw.soft, {Rotation = 180}):Play()
+			TweenService:Create(chev, Tw.spring, {Rotation = 180}):Play()
 			TweenService:Create(trSt, Tw.snap, {Transparency = 0.15, Color = LINE}):Play()
 			TweenService:Create(panel, Tw.list, {
 				Size = UDim2.fromOffset(sz.X, panelH), BackgroundTransparency = 0.05
@@ -1437,7 +1467,7 @@ local function multiDropdown(par, title, options, defaults, ord, cb)
 		BackgroundColor3 = Colors.Button, BackgroundTransparency = 0.12,
 		BorderSizePixel = 0, Text = "", AutoButtonColor = false, Parent = row,
 	})
-	corner(trigger, 8)
+	corner(trigger, 12)
 	local trSt = stroke(trigger, Colors.RowStroke, 1, 0.4)
 	local triggerLbl = mk("TextLabel", {
 		Position = UDim2.fromOffset(12, 0), Size = UDim2.new(1, -36, 1, 0),
@@ -1446,12 +1476,7 @@ local function multiDropdown(par, title, options, defaults, ord, cb)
 		TextSize = 14, TextColor3 = Colors.Text,
 		TextXAlignment = Enum.TextXAlignment.Left, Parent = trigger,
 	})
-	local chev = mk("TextLabel", {
-		AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -10, 0.5, 0),
-		Size = UDim2.fromOffset(16, 16), BackgroundTransparency = 1, BorderSizePixel = 0,
-		Text = "\226\150\190", FontFace = FingerPaint, TextSize = 12,
-		TextColor3 = Colors.TextDim, Parent = trigger,
-	})
+	local chev = chevron(trigger, Colors.TextDim)
 
 	local itemH = 28
 	local itemGap = 2
@@ -1490,7 +1515,7 @@ local function multiDropdown(par, title, options, defaults, ord, cb)
 	}
 
 	entry.closeFn = function(instant)
-		TweenService:Create(chev, Tw.soft, { Rotation = 0 }):Play()
+		TweenService:Create(chev, Tw.spring, { Rotation = 0 }):Play()
 		TweenService:Create(trSt, Tw.soft, { Transparency = 0.4, Color = Colors.RowStroke }):Play()
 		if instant then
 			panel.Visible = false
@@ -1561,7 +1586,7 @@ local function multiDropdown(par, title, options, defaults, ord, cb)
 		entry.flipUp = flipUp
 		table.insert(OpenPops, entry)
 
-		TweenService:Create(chev, Tw.soft, { Rotation = 180 }):Play()
+		TweenService:Create(chev, Tw.spring, { Rotation = 180 }):Play()
 		TweenService:Create(trSt, Tw.snap, { Transparency = 0.15, Color = LINE }):Play()
 		TweenService:Create(panel, Tw.list, {
 			Size = UDim2.fromOffset(sz.X, panelH),
@@ -1737,7 +1762,7 @@ end
 			corner(fill, 5)
 			local kn = mk("Frame", {
 				AnchorPoint = Vector2.new(0.5,0.5), Position = UDim2.fromScale(init,0.5),
-				Size = UDim2.fromOffset(12,12), BackgroundColor3 = Colors.Text, BorderSizePixel = 0, Parent = track,
+				Size = UDim2.fromOffset(18,12), BackgroundColor3 = Colors.Accent, BorderSizePixel = 0, Parent = track,
 			})
 			corner(kn, 6)
 			local valLbl = mk("TextLabel", {
@@ -1961,7 +1986,7 @@ end
 			return math.min(b.X + 2, btn.AbsoluteSize.X - 46)
 		end
 		local function showUnder()
-			TweenService:Create(under, Tw.soft, {Size = UDim2.fromOffset(textW(), 2)}):Play()
+			TweenService:Create(under, Tw.spring, {Size = UDim2.fromOffset(textW(), 2)}):Play()
 		end
 		local function hideUnder()
 			if CurTab == id then return end
