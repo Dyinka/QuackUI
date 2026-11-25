@@ -1,3 +1,4 @@
+-- коч
 local Players          = game:GetService("Players")
 local TweenService     = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -514,12 +515,13 @@ function Library:CreateWindow(opts)
 
 	-- ============ COMPONENTS ============
 	local function section(par,title,ord)
-		local s=mk("Frame",{Size=UDim2.new(1,0,0,18),BackgroundTransparency=1,BorderSizePixel=0,LayoutOrder=ord or 0,Parent=par})
+		local s=mk("Frame",{Size=UDim2.new(1,0,0,22),BackgroundTransparency=1,BorderSizePixel=0,LayoutOrder=ord or 0,Parent=par})
 		mk("TextLabel",{Size=UDim2.new(1,0,1,0),BackgroundTransparency=1,Text=string.upper(title),FontFace=FontMain,TextSize=11,TextColor3=C.TextMuted,TextXAlignment=Enum.TextXAlignment.Left,Parent=s})
 	end
 
 	local function label(par,text,ord)
 		local l=mk("TextLabel",{Size=UDim2.new(1,0,0,0),AutomaticSize=Enum.AutomaticSize.Y,BackgroundTransparency=1,Text=text,FontFace=FontMain,TextSize=13,TextColor3=C.TextDim,TextXAlignment=Enum.TextXAlignment.Left,TextWrapped=true,LayoutOrder=ord or 0,Parent=par})
+		pad(l,2,2,0,0)
 		return {Set=function(v) l.Text=tostring(v or "") end, Get=function() return l.Text end}
 	end
 
@@ -849,19 +851,22 @@ function Library:CreateWindow(opts)
 			pad(headBtn,12,12,12,12)
 
 			local headLeft=mk("Frame",{Size=UDim2.new(1,-28,0,0),AutomaticSize=Enum.AutomaticSize.Y,BackgroundTransparency=1,Parent=headBtn})
-			mk("UIListLayout",{SortOrder=Enum.SortOrder.LayoutOrder,Padding=UDim.new(0,2),Parent=headLeft})
+			mk("UIListLayout",{SortOrder=Enum.SortOrder.LayoutOrder,Padding=UDim.new(0,4),Parent=headLeft})
 			mk("TextLabel",{Size=UDim2.new(1,0,0,20),BackgroundTransparency=1,Text=o.Title or "Group",FontFace=FontMain,TextSize=16,TextColor3=C.Text,TextXAlignment=Enum.TextXAlignment.Left,LayoutOrder=1,Parent=headLeft})
 			if o.Description and o.Description~="" then
 				mk("TextLabel",{Size=UDim2.new(1,0,0,0),AutomaticSize=Enum.AutomaticSize.Y,BackgroundTransparency=1,Text=o.Description,FontFace=FontMain,TextSize=12,TextColor3=C.TextDim,TextXAlignment=Enum.TextXAlignment.Left,TextWrapped=true,LayoutOrder=2,Parent=headLeft})
 			end
 
-			local chev=mk("TextLabel",{AnchorPoint=Vector2.new(1,0),Position=UDim2.new(1,0,0,0),Size=UDim2.fromOffset(20,20),BackgroundTransparency=1,Text="▾",FontFace=FontMain,TextSize=16,TextColor3=C.TextDim,Parent=headBtn})
+			local chev=mk("Frame",{AnchorPoint=Vector2.new(1,0.5),Position=UDim2.new(1,0,0.5,0),Size=UDim2.fromOffset(20,20),BackgroundTransparency=1,Parent=headBtn})
+			local ch1=mk("Frame",{AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.new(0.35,0,0.5,0),Size=UDim2.fromOffset(8,2),Rotation=45,BackgroundColor3=C.TextDim,BorderSizePixel=0,Parent=chev})
+			local ch2=mk("Frame",{AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.new(0.65,0,0.5,0),Size=UDim2.fromOffset(8,2),Rotation=-45,BackgroundColor3=C.TextDim,BorderSizePixel=0,Parent=chev})
+			corner(ch1,1) corner(ch2,1)
 
 			local sep=mk("Frame",{Size=UDim2.new(1,-24,0,1),Position=UDim2.fromOffset(12,0),BackgroundColor3=C.StrokeSoft,BackgroundTransparency=0.25,BorderSizePixel=0,LayoutOrder=2,Parent=g})
 
 			local bodyWrap=mk("Frame",{Size=UDim2.new(1,0,0,0),BackgroundTransparency=1,ClipsDescendants=true,LayoutOrder=3,Parent=g})
 			local body=mk("Frame",{Size=UDim2.new(1,0,0,0),AutomaticSize=Enum.AutomaticSize.Y,BackgroundTransparency=1,Parent=bodyWrap})
-			pad(body,0,12,12,12)
+			pad(body,12,12,12,12)
 			mk("UIListLayout",{SortOrder=Enum.SortOrder.LayoutOrder,Padding=UDim.new(0,8),Parent=body})
 
 			local gLayout=mk("UIListLayout",{SortOrder=Enum.SortOrder.LayoutOrder,Padding=UDim.new(0,0),Parent=g})
@@ -897,7 +902,7 @@ function Library:CreateWindow(opts)
 				if instant then applyState() return end
 				animating=true
 				local target=open and getBodyH() or 0
-				TweenService:Create(chev,Tw.group,{Rotation=open and 0 or -90,TextColor3=open and C.TextDim or C.TextMuted}):Play()
+				TweenService:Create(chev,Tw.group,{Rotation=open and 0 or -90}):Play() TweenService:Create(ch1,Tw.group,{BackgroundColor3=open and C.TextDim or C.TextMuted}):Play() TweenService:Create(ch2,Tw.group,{BackgroundColor3=open and C.TextDim or C.TextMuted}):Play()
 				TweenService:Create(sep,Tw.group,{BackgroundTransparency=open and 0.25 or 1}):Play()
 				local tw=TweenService:Create(bodyWrap,Tw.group,{Size=UDim2.new(1,0,0,target)})
 				tw:Play()
