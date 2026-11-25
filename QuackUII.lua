@@ -1,4 +1,3 @@
--- коч
 local Players          = game:GetService("Players")
 local TweenService     = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -661,9 +660,6 @@ function Library:CreateWindow(opts)
 		trig.MouseButton1Click:Connect(function() play("click") if entry.isOpen then closeOne(entry,false) else openDrop() end end)
 		return {Set=function(v) selected=v tl.Text=tostring(v) if cb then cb(v) end end, Get=function() return selected end}
 	end
-
-
-	local function colorpicker
 
 
 	local function colorpicker(par,title,def,ord,cb)
